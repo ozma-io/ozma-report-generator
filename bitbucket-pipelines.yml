@@ -1,0 +1,14 @@
+options:
+  max-time: 10
+pipelines:
+  default:
+    - step:
+        name: Build
+        image: mcr.microsoft.com/dotnet/sdk:5.0
+        caches:
+          - dotnetcore
+        script:
+          - dotnet publish -c Release
+          - cp -ar ReportGenerator/bin/*/*/publish publish
+        artifacts:
+          - publish/**
