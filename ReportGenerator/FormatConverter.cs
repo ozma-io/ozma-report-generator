@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using DDDN.OdtToHtml;
 using OpenHtmlToPdf;
 
@@ -13,7 +9,7 @@ namespace ReportGenerator
         public static string OdtToHtml(Stream stream)
         {
 			const string contentSubDirname = "content";
-			OdtConvertedData convertedData = null;
+			OdtConvertedData? convertedData = null;
 			var odtConvertSettings = new OdtConvertSettings
 			{
 				RootElementTagName = "article", 

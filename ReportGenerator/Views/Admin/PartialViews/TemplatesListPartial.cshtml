@@ -1,0 +1,20 @@
+﻿@model List<ReportGenerator.Models.VReportTemplate>
+<thead>
+    <tr>
+        <th>Название</th>
+        <th>Схема</th>
+        <th>Параметры</th>
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+@foreach (var item in Model)
+{
+    <tr>
+        <td>@item.Name</td>
+        <td>@item.SchemeName</td>
+        <td>@item.Parameters</td>
+        <td><button type="button" class="btn btn-danger" onclick="Delete(@item.Id) ">Удалить</button></td>
+    </tr>
+}
+</tbody>

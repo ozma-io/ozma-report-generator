@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Схемы шаблонов";
+}
+
+<div class="text-left">
+    <h1 class="display-4">Схемы шаблонов</h1>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal">Добавить схему &raquo;</button>
+    <br />
+    <br />
+    <div id="dTable" class="form-group">
+        <table id="tableMainList" class="table">
+        </table>
+    </div>
+</div>
+@await Html.PartialAsync("~/Views/Admin/PartialViews/AddSchemePartial.cshtml")
+@section scripts
+{
+    <script type="text/javascript">
+        var loadListUrl = "/Admin/LoadSchemes";
+        var addUrl = "/Admin/AddScheme";
+        var deleteUrl = "/Admin/DeleteScheme";
+    </script>
+    <script type="text/javascript" src="~/js/crud.js"></script>
+}

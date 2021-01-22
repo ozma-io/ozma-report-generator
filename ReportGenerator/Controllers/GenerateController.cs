@@ -3,11 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using ReportGenerator.FunDbApi;
+using ReportGenerator.Models;
 using ReportGenerator.Repositories;
 using Sandwych.Reporting.OpenDocument;
 
@@ -27,30 +28,26 @@ namespace ReportGenerator.Controllers
         [Route("api/test")]
         public async Task Get()
         {
-            var apiConnector = new FunDbApiConnector();
-            //var q = await apiConnector.LoadQuery("{$id int}: SELECT main_name FROM base.contacts WHERE id=$id",
-            //     new Dictionary<string, object>
-            //     {
-            //         {"id", 45}
-            //     });
-            var q = await apiConnector.LoadQueryAnonymous("{$id int, $month int, $year int }: SELECT \"transaction_date\",\"account_from\"=>contact => main_name as contact_from,\"account_to\"=>contact => main_name as contact_to,\"amount\",\"name\" FROM fin.transactions WHERE NOT is_deleted AND transactions.account_to=>contact = $id AND date_part('month', transaction_date) = $month AND date_part('year', transaction_date) = $year ORDER BY transaction_date, id",
-                new Dictionary<string, object>
-                {
-                    {"id", 45},
-                    {"month", 6},
-                    {"year", 2020},
-                });
+            //var apiConnector = new FunDbApiConnector();
+            //var q = await apiConnector.LoadQueryAnonymous("{$id int, $month int, $year int }: SELECT \"transaction_date\",\"account_from\"=>contact => main_name as contact_from,\"account_to\"=>contact => main_name as contact_to,\"amount\",\"name\" FROM fin.transactions WHERE NOT is_deleted AND transactions.account_to=>contact = $id AND date_part('month', transaction_date) = $month AND date_part('year', transaction_date) = $year ORDER BY transaction_date, id",
+            //    new Dictionary<string, object>
+            //    {
+            //        {"id", 45},
+            //        {"month", 6},
+            //        {"year", 2020},
+            //    });
+            var odtWithQueries = await OdfDocument.LoadFromAsync(@"d:\\template_with_queries.odt");
+            var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
         }
 
         [HttpGet]
         [Route("api/{templateName}/generate")]
-        public async Task<FileResult> Get(string templateName, int? count, string format)
+        public async Task<FileResult?> Get(string templateName, int? count, string? format)
         {
-            //var requestQuery = HttpContext.Request.Query;
             return await GenerateTemplate(templateName, count, format);
         }
 
-        private async Task<FileResult> GenerateTemplate(string templateName, int? count, string format)
+        private async Task<FileResult?> GenerateTemplate(string templateName, int? count, string? format)
         {
             if (string.IsNullOrEmpty(templateName))
             {
@@ -65,33 +62,19 @@ namespace ReportGenerator.Controllers
                     paramsWithValues.Add(queryParam.Key, queryParam.Value.ToString());
             }
 
-            //ToDo: будет вызываться в админке при создании шаблона  
-            var odt = await OdfDocument.LoadFromAsync("template_with_queries.odt");
-            var parameters = new Dictionary<string, Type>
-            {
-                { "id", typeof(int)},
-                { "month", typeof(int)},
-                { "year", typeof(int)},
-            }; 
-            var template = ReportTemplate.CreateFromOdt(templateName, parameters, odt);
+            ReportTemplate? template = null;
             using (var repository = new ReportTemplateRepository())
             {
-                await repository.SaveTemplate(template, odt);
+                template = await repository.LoadTemplate(templateName);
             }
-            //
-
-            //ToDo: var template = repository.LoadTemplate(templateName);
-            if (templateName != "best_customers") //ToDo: if (template == null)
+            if (template == null)
             {
                 throw new Exception("Template '" + templateName + "' not found");
             }
 
-            var generatedReport = await template.GenerateReport(paramsWithValues);
+            var generatedReport = await ReportTemplateFunctions.GenerateReport(template, paramsWithValues);
             if (generatedReport != null)
             {
-                //await generatedReport.SaveAsync(@"d:\\" + templateName + ".odt"); 
-                //return null;
-
                 byte[] bytes;
                 await using (var stream = new MemoryStream())
                 {
@@ -99,7 +82,7 @@ namespace ReportGenerator.Controllers
                     bytes = stream.ToArray();
                 }
 
-                FileContentResult result = null;
+                FileContentResult? result = null;
                 if (format == "pdf") 
                 {
                     byte[] bytesPdf;

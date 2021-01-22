@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using ReportGenerator.Repositories;
 
 namespace ReportGenerator.FunDbApi
 {
@@ -11,9 +10,9 @@ namespace ReportGenerator.FunDbApi
         //public List<string> ParameterNames { get; private set; }
 
         public bool IsLoaded { get; private set; }
-        private object _result;
+        private object? _result;
 
-        public object Result
+        public object? Result
         {
             get
             {
@@ -32,10 +31,13 @@ namespace ReportGenerator.FunDbApi
         public async Task LoadDataAsync(Dictionary<string, object> queryParametersWithValues)
         {
             var queryTextToRun = QueryTextWithoutParameterValues;
-            dynamic result = null; 
+            dynamic? result = null;
             using (var apiConnector = new FunDbApiConnector())
             {
-                result = await apiConnector.LoadQueryAnonymous(queryTextToRun, queryParametersWithValues); 
+                if (queryTextToRun.StartsWith("/views/"))
+                    result = await apiConnector.LoadQueryNamed(queryTextToRun, queryParametersWithValues);
+                else
+                    result = await apiConnector.LoadQueryAnonymous(queryTextToRun, queryParametersWithValues);
             }
             if (result != null) IsLoaded = true;
             _result = result; 

@@ -1,0 +1,36 @@
+﻿<div id="addModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Добавление шаблона</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addForm" enctype="multipart/form-data">
+                    <table>
+                        <tr>
+                            <td><label>Название</label></td>
+                            <td>@Html.TextBox("Name", null, new { @required = "required", @maxlength = "50" })</td>
+                        </tr>
+                        <tr>
+                            <td><label>Схема</label></td>
+                            <td>@Html.DropDownList("SchemeId", null, new {@required = "required"})</td>
+                        </tr>
+                        <tr>
+                            <td><label>Параметры</label></td>
+                            <td>@Html.TextArea("Parameters", null, new { @required = "required", @resize = "none", @placeholder = "id: int, month: int, year: int" })</td>
+                        </tr>
+                        <tr>
+                            <td><label>Файл шаблона&nbsp;</label></td>
+                            <td><input name="UploadedOdtFile" type="file" accept=".odt" required="required"></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="AddWithFile() ">Добавить</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>

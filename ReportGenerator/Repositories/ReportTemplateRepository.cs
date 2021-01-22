@@ -1,27 +1,38 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Sandwych.Reporting.OpenDocument;
+using Microsoft.EntityFrameworkCore;
+using ReportGenerator.Models;
 
 namespace ReportGenerator.Repositories
 {
-    public class ReportTemplateRepository : IDisposable
+    public class ReportTemplateRepository : Repository
     {
-        public void Dispose()
+        public async Task AddTemplate(ReportTemplate template)
         {
-            //ToDo
+            await dbContext.ReportTemplates.AddAsync(template);
+            await dbContext.SaveChangesAsync();
+        }
+        
+        public async Task<List<VReportTemplate>> LoadAllTemplates()
+        {
+            return await dbContext.VReportTemplates.AsNoTracking().ToListAsync();
         }
 
-        public async Task SaveTemplate(ReportTemplate template, OdfDocument odtWithQueries)
+        public async Task DeleteTemplate(int id)
         {
-            //ToDo: сохранять в бд
-            var odtWithoutQueries = ReportTemplate.RemoveQueriesFromOdt(odtWithQueries);
-            await odtWithoutQueries.SaveAsync("template_without_queries.odt");
+            var item = dbContext.ReportTemplates.FirstOrDefault(p => p.Id == id);
+            if (item != null)
+            {
+                dbContext.Remove(item);
+                await dbContext.SaveChangesAsync();
+            }
         }
 
-        public async Task<OdfDocument> LoadOdtWithoutQueries(ReportTemplate template)
+        public async Task<ReportTemplate?> LoadTemplate(string templateName)
         {
-            //ToDo: загружать из бд
-            return await OdfDocument.LoadFromAsync("template_without_queries.odt");
+            return await dbContext.ReportTemplates.AsNoTracking().Include(p => p.ReportTemplateQueries)
+                .FirstOrDefaultAsync(p => p.Name == templateName);
         }
     }
 }
