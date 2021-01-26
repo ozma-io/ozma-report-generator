@@ -4,46 +4,67 @@ using System.Dynamic;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RestSharp;
 
 namespace ReportGenerator.FunDbApi
 {
-    public class FunDbApiConnector : IDisposable
+    public class FunDbApiConnector
     {
-        private const string BaseApiUrl = "https://anton-laptev.api.ozma.org";
-        private const string TokenUrl = "https://account.ozma.io/auth/realms/default/protocol/openid-connect/token";
-        private const string ClientId = "template-generator";
-        private const string ClientSecret = "31fb5f48-e8c9-4e5e-83d3-b3a4b8f41384";
-        private const string UserName = "anton.laptev@gmail.com";
-        private const string Password = "testpwd";
+        private readonly IConfiguration configuration;
+        private readonly string token;
+        private readonly string instanceName;
 
-        public void Dispose()
+        public FunDbApiConnector(string instanceName, string token)
         {
-            //ToDo
+            configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json")
+                .Build();
+            this.token = token;
+            this.instanceName = instanceName;
         }
 
-        private async Task<string> GetToken() 
+        private string GetApiUrl()
         {
-            var client = new RestClient(TokenUrl);
-            var request = new RestRequest(Method.POST);
-            request.AddHeader("cache-control", "no-cache");
-            request.AddHeader("content-type", "application/x-www-form-urlencoded");
-            request.AddParameter("application/x-www-form-urlencoded",
-                "grant_type=password" +
-                "&client_id=" + ClientId +
-                "&client_secret=" + ClientSecret +
-                "&username=" + UserName +
-                "&password=" + Password,
-                ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteAsync(request);
-            var responseJson = response.Content;
-            var token = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseJson)["access_token"].ToString();
-            if (string.IsNullOrEmpty(token))
+            return "https://" + instanceName + ".api.ozma.org";
+        }
+
+        //private async Task<string> GetToken()
+        //{
+        //    const string userName = "anton.laptev@gmail.com";
+        //    const string password = "testpwd";
+        //    var client = new RestClient(configuration["AuthSettings:OpenIdConnectUrl"] + "token");
+        //    var request = new RestRequest(Method.POST);
+        //    request.AddHeader("cache-control", "no-cache");
+        //    request.AddHeader("content-type", "application/x-www-form-urlencoded");
+        //    request.AddParameter("application/x-www-form-urlencoded",
+        //        "grant_type=password" +
+        //        "&client_id=" + configuration["AuthSettings:ClientId"] +
+        //        "&client_secret=" + configuration["AuthSettings:ClientSecret"] +
+        //        "&username=" + userName +
+        //        "&password=" + password,
+        //        ParameterType.RequestBody);
+        //    IRestResponse response = await client.ExecuteAsync(request);
+        //    var responseJson = response.Content;
+        //    var token = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseJson)["access_token"].ToString();
+        //    if (string.IsNullOrEmpty(token))
+        //    {
+        //        throw new AuthenticationException("ozma.io API authentication failed.");
+        //    }
+        //    return token;
+        //}
+
+        public async Task<bool> GetUserIsAdmin()
+        {
+            var values = new Dictionary<string, object>
             {
-                throw new AuthenticationException("ozma.io API authentication failed.");
-            }
-            return token;
+                //{"name", "\"" +configuration["AuthSettings:UserName"] + "\""}
+            };
+            var query = await LoadQueryAnonymous("SELECT is_root FROM public.users WHERE id = $$user_id", values);
+            if (query == true) return true;
+            else return false;
         }
 
         private RestRequest PrepareRequest(string token, Dictionary<string, object> parameterValues)
@@ -101,12 +122,11 @@ namespace ReportGenerator.FunDbApi
         public async Task<dynamic?> LoadQueryAnonymous(string queryText, Dictionary<string, object> parameterValues)
         {
             dynamic? result = null;
-            var token = await GetToken();
             if (!string.IsNullOrEmpty(token))
             {
                 var request = PrepareRequest(token, parameterValues);
                 request.AddParameter("__query", queryText, ParameterType.QueryString);
-                result = await ExecuteRequest(BaseApiUrl + "/views/anonymous/entries", request);
+                result = await ExecuteRequest(GetApiUrl() + "/views/anonymous/entries", request);
             }
             return result;
         }
@@ -114,12 +134,11 @@ namespace ReportGenerator.FunDbApi
         public async Task<dynamic?> LoadQueryNamed(string queryText, Dictionary<string, object> parameterValues)
         {
             dynamic? result = null;
-            var token = await GetToken();
             if (!string.IsNullOrEmpty(token))
             {
                 var request = PrepareRequest(token, parameterValues);
                 if (!queryText.EndsWith("/entries")) queryText = queryText + "/entries";
-                result = await ExecuteRequest(BaseApiUrl + queryText, request);
+                result = await ExecuteRequest(GetApiUrl() + queryText, request);
             }
             return result;
         }

@@ -10,8 +10,9 @@
   <ItemGroup>
     <PackageReference Include="DDDN.OdtToHtml" Version="0.25.1.211" />
     <PackageReference Include="InfiniSwiss.OpenHtmlToPdf" Version="1.0.2" />
+    <PackageReference Include="Keycloak.Net" Version="1.0.16" />
     <PackageReference Include="MaltReport2" Version="3.0.2-beta" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -22,5 +23,7 @@
     <PackageReference Include="RestSharp" Version="106.11.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties wwwroot_4lib_4bootstrap_4dist_4css_4bootstrap_1css_1map__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

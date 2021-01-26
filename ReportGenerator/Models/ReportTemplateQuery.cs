@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
-
 namespace ReportGenerator.Models
 {
     public partial class ReportTemplateQuery

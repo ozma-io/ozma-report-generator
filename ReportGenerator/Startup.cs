@@ -1,18 +1,12 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
+using Microsoft.IdentityModel.Logging;
 
 namespace ReportGenerator
 {
@@ -30,46 +24,28 @@ namespace ReportGenerator
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthentication(auth =>
-            {
-                auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+            services.AddAuthentication(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = Configuration["KeycloakAuth:Audience"],
-                    ValidIssuer = Configuration["KeycloakAuth:Issuer"],
-                    RequireExpirationTime = true,
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(Configuration["KeycloakAuth:key"])),
-                    ValidateIssuerSigningKey = true,
-                    SaveSigninToken = true
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
+                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                })
+                .AddCookie()
+                .AddOpenIdConnect(options =>
                     {
-                        var auth = new KeycloakAuth(Configuration);
-                        var identity = auth.GetUserIdentity("Administrator");
-                        var token = auth.GetToken(identity); 
-                        if ((identity != null) && (!string.IsNullOrEmpty(token)))
-                        {
-                            context.Token = token;
-                            context.Principal = new ClaimsPrincipal(identity);
-                            context.Success();
-                        }
-                        else context.Fail("User not authorized");
-
-                        return Task.CompletedTask;
+                        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                        options.ClientId = Configuration["AuthSettings:ClientId"];
+                        options.ClientSecret = Configuration["AuthSettings:ClientSecret"];
+                        options.Authority = Configuration["AuthSettings:OpenIdConnectUrl"];
+                        options.SaveTokens = true;
+                        options.RequireHttpsMetadata = false;
+                        options.ResponseType = "code";
+                        options.GetClaimsFromUserInfoEndpoint = true;
+                        options.Scope.Clear();
+                        options.Scope.Add("openid");
                     }
-                };
-            });
-            
+                );
+
             services.AddControllersWithViews();
         }
 
@@ -79,6 +55,7 @@ namespace ReportGenerator
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                IdentityModelEventSource.ShowPII = true;
             }
             else
             {
@@ -94,7 +71,7 @@ namespace ReportGenerator
             
             app.UseAuthentication();
             app.UseAuthorization();
-
+            
             //app.UseSession();
 
             app.UseEndpoints(endpoints =>
@@ -102,7 +79,7 @@ namespace ReportGenerator
                 //endpoints.MapControllers();
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Admin}/{action=Schemes}/{id?}");
+                    pattern: "{controller=Admin}/{action=Index}/{id?}");
             });
         }
     }

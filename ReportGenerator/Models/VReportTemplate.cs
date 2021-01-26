@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
-
 namespace ReportGenerator.Models
 {
     public partial class VReportTemplate
@@ -12,5 +10,6 @@ namespace ReportGenerator.Models
         public int? SchemeId { get; set; }
         public string Parameters { get; set; }
         public string SchemeName { get; set; }
+        public int? InstanceId { get; set; }
     }
 }

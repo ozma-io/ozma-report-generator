@@ -57,7 +57,7 @@ namespace ReportGenerator
             return odt;
         }
 
-        public static async Task<OdfDocument?> GenerateReport(ReportTemplate template, Dictionary<string, object> parametersWithValues)
+        public static async Task<OdfDocument?> GenerateReport(ReportTemplate template, Dictionary<string, object> parametersWithValues, string instanceName, string token)
         {
             var parameters = GetParameters(template);
             OdfDocument? result = null;
@@ -76,7 +76,7 @@ namespace ReportGenerator
 
             foreach (var funDbQuery in queriesFromOdt)
             {
-                await funDbQuery.LoadDataAsync(parametersWithValues);
+                await funDbQuery.LoadDataAsync(parametersWithValues, instanceName, token);
             }
 
             var loadedQueries = queriesFromOdt.Where(p => p.IsLoaded).ToList();

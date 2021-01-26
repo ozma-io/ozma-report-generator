@@ -6,3 +6,9 @@ function ShowErrorMessage(messageText) {
     $('#alert-modal-body').html(messageText);
     $('#alert-modal').modal('show');
 }
+function CheckCharacters(event) {
+    if (event.which == 32) {
+        event.preventDefault();
+        return false;
+    }
+}

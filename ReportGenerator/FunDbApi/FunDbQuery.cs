@@ -21,26 +21,23 @@ namespace ReportGenerator.FunDbApi
             }
         }
 
-        public FunDbQuery(string name, string queryTextWithoutParameterValues/*, List<string> parameterNames*/)
+        public FunDbQuery(string name, string queryTextWithoutParameterValues)
         {
             Name = name;
             QueryTextWithoutParameterValues = queryTextWithoutParameterValues;
-            //ParameterNames = parameterNames;
         }
 
-        public async Task LoadDataAsync(Dictionary<string, object> queryParametersWithValues)
+        public async Task LoadDataAsync(Dictionary<string, object> queryParametersWithValues, string instanceName, string token)
         {
             var queryTextToRun = QueryTextWithoutParameterValues;
             dynamic? result = null;
-            using (var apiConnector = new FunDbApiConnector())
-            {
-                if (queryTextToRun.StartsWith("/views/"))
-                    result = await apiConnector.LoadQueryNamed(queryTextToRun, queryParametersWithValues);
-                else
-                    result = await apiConnector.LoadQueryAnonymous(queryTextToRun, queryParametersWithValues);
-            }
+            var apiConnector = new FunDbApiConnector(instanceName, token);
+            if (queryTextToRun.StartsWith("/views/"))
+                result = await apiConnector.LoadQueryNamed(queryTextToRun, queryParametersWithValues);
+            else
+                result = await apiConnector.LoadQueryAnonymous(queryTextToRun, queryParametersWithValues);
             if (result != null) IsLoaded = true;
-            _result = result; 
+            _result = result;
         }
     }
 }

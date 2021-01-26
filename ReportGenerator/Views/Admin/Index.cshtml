@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Шаблоны и схемы шаблонов";
+}
+<div class="text-left">
+    <h1 class="display-4">Схемы шаблонов</h1>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addSchemeModal">Добавить схему &raquo;</button>
+    <br />
+    <br />
+    <div class="form-group">
+        <table id="tableMainListSchemes" class="table">
+        </table>
+    </div>
+</div>
+<div class="text-left">
+    <h1 class="display-4">Шаблоны</h1>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addTemplateModal">Добавить шаблон &raquo;</button>
+    <br />
+    <br />
+    <div class="form-group">
+        <table id="tableMainListTemplates" class="table">
+        </table>
+    </div>
+</div>
+@await Html.PartialAsync("~/Views/Admin/PartialViews/AddSchemePartial.cshtml")
+@await Html.PartialAsync("~/Views/Admin/PartialViews/AddTemplatePartial.cshtml")
+@section scripts
+{
+    <script type="text/javascript">
+        var instanceName = '@ViewBag.instanceName';
+    </script>
+    <script type="text/javascript" src="~/js/crud.js"></script>
+}

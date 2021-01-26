@@ -15,8 +15,7 @@ using Test.Models;
 
 namespace ReportGenerator.Controllers
 {
-    [Authorize]
-    public class AdminController : Controller
+    public class AdminController : BaseController
     {
         private readonly ILogger<AdminController> _logger;
 
@@ -25,23 +24,55 @@ namespace ReportGenerator.Controllers
             _logger = logger;
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        #region Схемы шаблонов 
-        public IActionResult Schemes()
+        private async Task<bool> HasAdminRightsForInstance(string instanceName)
         {
+            var token = await GetToken();
+            var adminRights = await new FunDbApi.FunDbApiConnector(instanceName, token).GetUserIsAdmin();
+            return adminRights;
+        }
+
+        [Route("admin/{instanceName}")]
+        public async Task<IActionResult> Index(string instanceName)
+        {
+            if (string.IsNullOrEmpty(instanceName))
+                throw new Exception("Instance name cannot be empty");
+
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
+            ViewBag.instanceName = instanceName;
+            var list = new List<ReportTemplateScheme>();
+            using (var repository = new ReportTemplateSchemeRepository(instanceName))
+            {
+                list = await repository.LoadAllSchemes();
+            }
+            var selectList = new SelectList(list, "Id", "Name");
+            ViewBag.SchemeId = selectList;
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> LoadSchemes()
+        private static string RemoveRestrictedSymbols(string text)
         {
+            return text.Replace(" ", "").Replace("/", "").Replace("__", "");
+        }
+
+        #region Схемы шаблонов 
+        [HttpGet]
+        [Route("admin/{instanceName}/LoadSchemes")]
+        public async Task<IActionResult> LoadSchemes(string instanceName)
+        {
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
             var list = new List<ReportTemplateScheme>();
-            using (var repository = new ReportTemplateSchemeRepository())
+            using (var repository = new ReportTemplateSchemeRepository(instanceName))
             {
                 list = await repository.LoadAllSchemes();
             }
@@ -49,12 +80,17 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddScheme(ReportTemplateScheme model)
+        [Route("admin/{instanceName}/AddScheme")]
+        public async Task<IActionResult> AddScheme(string instanceName, ReportTemplateScheme model)
         {
-            using (var repository = new ReportTemplateSchemeRepository())
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
+            using (var repository = new ReportTemplateSchemeRepository(instanceName))
             {
                 try
                 {
+                    model.Name = RemoveRestrictedSymbols(model.Name);
                     await repository.AddScheme(model);
                     return Ok();
                 }
@@ -69,9 +105,13 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteScheme(int id)
+        [Route("admin/{instanceName}/DeleteScheme")]
+        public async Task<IActionResult> DeleteScheme(string instanceName, int id)
         {
-            using (var repository = new ReportTemplateSchemeRepository())
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
+            using (var repository = new ReportTemplateSchemeRepository(instanceName))
             {
                 try
                 {
@@ -90,23 +130,15 @@ namespace ReportGenerator.Controllers
         #endregion
 
         #region Шаблоны
-        public async Task<IActionResult> Templates()
-        {
-            var list = new List<ReportTemplateScheme>();
-            using (var repository = new ReportTemplateSchemeRepository())
-            {
-                list = await repository.LoadAllSchemes();
-            }
-            var selectList = new SelectList(list, "Id", "Name");
-            ViewBag.SchemeId = selectList;
-            return View();
-        }
-
         [HttpGet]
-        public async Task<IActionResult> LoadTemplates()
+        [Route("admin/{instanceName}/LoadTemplates")]
+        public async Task<IActionResult> LoadTemplates(string instanceName)
         {
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
             var list = new List<VReportTemplate>();
-            using (var repository = new ReportTemplateRepository())
+            using (var repository = new ReportTemplateRepository(instanceName))
             {
                 list = await repository.LoadAllTemplates();
             }
@@ -114,8 +146,12 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddTemplate(IFormFile UploadedOdtFile, ReportTemplate model)
+        [Route("admin/{instanceName}/AddTemplate")]
+        public async Task<IActionResult> AddTemplate(string instanceName, IFormFile UploadedOdtFile, ReportTemplate model)
         {
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
             OdfDocument? odtWithQueries = null;
             await using (var stream = new MemoryStream())
             {
@@ -140,10 +176,11 @@ namespace ReportGenerator.Controllers
                 await odtWithoutQueries.SaveAsync(stream);
                 model.OdtWithoutQueries = stream.ToArray();
             }
-            using (var repository = new ReportTemplateRepository())
+            using (var repository = new ReportTemplateRepository(instanceName))
             {
                 try
                 {
+                    model.Name = RemoveRestrictedSymbols(model.Name);
                     await repository.AddTemplate(model);
                     return Ok();
                 }
@@ -158,9 +195,13 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteTemplate(int id)
+        [Route("admin/{instanceName}/DeleteTemplate")]
+        public async Task<IActionResult> DeleteTemplate(string instanceName, int id)
         {
-            using (var repository = new ReportTemplateRepository())
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
+            using (var repository = new ReportTemplateRepository(instanceName))
             {
                 try
                 {

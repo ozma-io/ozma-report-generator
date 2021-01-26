@@ -1,9 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
-
-#nullable disable
 
 namespace ReportGenerator.Models
 {
@@ -18,6 +15,7 @@ namespace ReportGenerator.Models
         {
         }
 
+        public virtual DbSet<Instance> Instances { get; set; }
         public virtual DbSet<ReportTemplate> ReportTemplates { get; set; }
         public virtual DbSet<ReportTemplateQuery> ReportTemplateQueries { get; set; }
         public virtual DbSet<ReportTemplateScheme> ReportTemplateSchemes { get; set; }
@@ -39,9 +37,21 @@ namespace ReportGenerator.Models
         {
             modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
 
+            modelBuilder.Entity<Instance>(entity =>
+            {
+                entity.HasIndex(e => e.Name, "instances_name_uindex")
+                    .IsUnique();
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+            });
+
             modelBuilder.Entity<ReportTemplate>(entity =>
             {
-                entity.HasIndex(e => e.Name, "reporttemplates_name_uindex")
+                entity.HasIndex(e => e.InstanceId, "reporttemplates_instanceid_index");
+
+                entity.HasIndex(e => new { e.Name, e.InstanceId, e.SchemeId }, "reporttemplates_name_instanceid_schemeid_uindex")
                     .IsUnique();
 
                 entity.HasIndex(e => e.SchemeId, "reporttemplates_schemeid_index");
@@ -54,6 +64,11 @@ namespace ReportGenerator.Models
 
                 entity.Property(e => e.Parameters).HasColumnType("character varying");
 
+                entity.HasOne(d => d.Instance)
+                    .WithMany(p => p.ReportTemplates)
+                    .HasForeignKey(d => d.InstanceId)
+                    .HasConstraintName("reporttemplates_instances_id_fk");
+
                 entity.HasOne(d => d.Scheme)
                     .WithMany(p => p.ReportTemplates)
                     .HasForeignKey(d => d.SchemeId)
@@ -62,8 +77,6 @@ namespace ReportGenerator.Models
 
             modelBuilder.Entity<ReportTemplateQuery>(entity =>
             {
-                entity.HasIndex(e => e.TemplateId, "reporttemplatequeries_templateid_index");
-
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
@@ -80,12 +93,19 @@ namespace ReportGenerator.Models
 
             modelBuilder.Entity<ReportTemplateScheme>(entity =>
             {
-                entity.HasIndex(e => e.Name, "reporttemplateschemes_name_uindex")
+                entity.HasIndex(e => e.InstanceId, "reporttemplateschemes_instanceid_index");
+
+                entity.HasIndex(e => new { e.Name, e.InstanceId }, "reporttemplateschemes_name_instanceid_uindex")
                     .IsUnique();
 
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
+
+                entity.HasOne(d => d.Instance)
+                    .WithMany(p => p.ReportTemplateSchemes)
+                    .HasForeignKey(d => d.InstanceId)
+                    .HasConstraintName("reporttemplateschemes_instances_id_fk");
             });
 
             modelBuilder.Entity<VReportTemplate>(entity =>

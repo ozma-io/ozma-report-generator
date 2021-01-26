@@ -4,18 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
-using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
 using ReportGenerator.Repositories;
-using Sandwych.Reporting.OpenDocument;
 
 namespace ReportGenerator.Controllers
 {
     [ApiController]
-    public class GenerateController : ControllerBase
+    public class GenerateController : BaseController
     {
         private readonly ILogger<GenerateController> _logger;
 
@@ -25,30 +22,18 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpGet]
-        [Route("api/test")]
-        public async Task Get()
+        [Route("api/{instanceName}/{templateName}/generate")]
+        public async Task<FileResult?> Get(string instanceName, string templateName, int? count, string? format)
         {
-            //var apiConnector = new FunDbApiConnector();
-            //var q = await apiConnector.LoadQueryAnonymous("{$id int, $month int, $year int }: SELECT \"transaction_date\",\"account_from\"=>contact => main_name as contact_from,\"account_to\"=>contact => main_name as contact_to,\"amount\",\"name\" FROM fin.transactions WHERE NOT is_deleted AND transactions.account_to=>contact = $id AND date_part('month', transaction_date) = $month AND date_part('year', transaction_date) = $year ORDER BY transaction_date, id",
-            //    new Dictionary<string, object>
-            //    {
-            //        {"id", 45},
-            //        {"month", 6},
-            //        {"year", 2020},
-            //    });
-            var odtWithQueries = await OdfDocument.LoadFromAsync(@"d:\\template_with_queries.odt");
-            var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
+            return await GenerateTemplate(instanceName, templateName, count, format);
         }
 
-        [HttpGet]
-        [Route("api/{templateName}/generate")]
-        public async Task<FileResult?> Get(string templateName, int? count, string? format)
+        private async Task<FileResult?> GenerateTemplate(string instanceName, string templateName, int? count, string? format)
         {
-            return await GenerateTemplate(templateName, count, format);
-        }
-
-        private async Task<FileResult?> GenerateTemplate(string templateName, int? count, string? format)
-        {
+            if (string.IsNullOrEmpty(instanceName))
+            {
+                throw new Exception("No InstanceName specified");
+            }
             if (string.IsNullOrEmpty(templateName))
             {
                 throw new Exception("No TemplateName specified");
@@ -63,7 +48,7 @@ namespace ReportGenerator.Controllers
             }
 
             ReportTemplate? template = null;
-            using (var repository = new ReportTemplateRepository())
+            using (var repository = new ReportTemplateRepository(instanceName))
             {
                 template = await repository.LoadTemplate(templateName);
             }
@@ -72,7 +57,8 @@ namespace ReportGenerator.Controllers
                 throw new Exception("Template '" + templateName + "' not found");
             }
 
-            var generatedReport = await ReportTemplateFunctions.GenerateReport(template, paramsWithValues);
+            var token = await GetToken();
+            var generatedReport = await ReportTemplateFunctions.GenerateReport(template, paramsWithValues, instanceName, token);
             if (generatedReport != null)
             {
                 byte[] bytes;

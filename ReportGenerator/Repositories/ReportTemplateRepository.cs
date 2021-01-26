@@ -8,20 +8,27 @@ namespace ReportGenerator.Repositories
 {
     public class ReportTemplateRepository : Repository
     {
+        public ReportTemplateRepository(string instanceName) : base(instanceName)
+        {
+
+        }
+
         public async Task AddTemplate(ReportTemplate template)
         {
+            template.Instance = instance;
             await dbContext.ReportTemplates.AddAsync(template);
             await dbContext.SaveChangesAsync();
         }
         
         public async Task<List<VReportTemplate>> LoadAllTemplates()
         {
-            return await dbContext.VReportTemplates.AsNoTracking().ToListAsync();
+            return await dbContext.VReportTemplates.Where(p => p.InstanceId == instance.Id).AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task DeleteTemplate(int id)
         {
-            var item = dbContext.ReportTemplates.FirstOrDefault(p => p.Id == id);
+            var item = dbContext.ReportTemplates.FirstOrDefault(p => (p.InstanceId == instance.Id) && (p.Id == id));
             if (item != null)
             {
                 dbContext.Remove(item);
@@ -32,7 +39,7 @@ namespace ReportGenerator.Repositories
         public async Task<ReportTemplate?> LoadTemplate(string templateName)
         {
             return await dbContext.ReportTemplates.AsNoTracking().Include(p => p.ReportTemplateQueries)
-                .FirstOrDefaultAsync(p => p.Name == templateName);
+                .FirstOrDefaultAsync(p => (p.InstanceId == instance.Id) && (p.Name == templateName));
         }
     }
 }

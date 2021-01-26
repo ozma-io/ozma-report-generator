@@ -20,7 +20,7 @@ SET row_security = off;
 -- Name: ReportGenerator; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE "ReportGenerator" WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'Russian_Russia.1251';
+CREATE DATABASE "ReportGenerator" WITH TEMPLATE = template0 ENCODING = 'UTF8';
 
 
 ALTER DATABASE "ReportGenerator" OWNER TO postgres;
@@ -41,6 +41,40 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: Instances; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public."Instances" (
+    "Id" integer NOT NULL,
+    "Name" character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public."Instances" OWNER TO postgres;
+
+--
+-- Name: Instances_Id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public."Instances_Id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."Instances_Id_seq" OWNER TO postgres;
+
+--
+-- Name: Instances_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public."Instances_Id_seq" OWNED BY public."Instances"."Id";
+
 
 --
 -- Name: ReportTemplateQueries; Type: TABLE; Schema: public; Owner: postgres
@@ -84,6 +118,7 @@ ALTER SEQUENCE public."ReportTemplateQueries_Id_seq" OWNED BY public."ReportTemp
 
 CREATE TABLE public."ReportTemplateSchemes" (
     "Id" integer NOT NULL,
+    "InstanceId" integer NOT NULL,
     "Name" character varying(50) NOT NULL
 );
 
@@ -118,6 +153,7 @@ ALTER SEQUENCE public."ReportTemplateSchemes_Id_seq" OWNED BY public."ReportTemp
 
 CREATE TABLE public."ReportTemplates" (
     "Id" integer NOT NULL,
+    "InstanceId" integer NOT NULL,
     "SchemeId" integer NOT NULL,
     "Name" character varying(50) NOT NULL,
     "Parameters" character varying,
@@ -158,12 +194,20 @@ CREATE VIEW public."vReportTemplates" AS
     rt."Name",
     rt."SchemeId",
     rt."Parameters",
-    rts."Name" AS "SchemeName"
+    rts."Name" AS "SchemeName",
+    rt."InstanceId"
    FROM (public."ReportTemplates" rt
      LEFT JOIN public."ReportTemplateSchemes" rts ON ((rts."Id" = rt."SchemeId")));
 
 
 ALTER TABLE public."vReportTemplates" OWNER TO postgres;
+
+--
+-- Name: Instances Id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."Instances" ALTER COLUMN "Id" SET DEFAULT nextval('public."Instances_Id_seq"'::regclass);
+
 
 --
 -- Name: ReportTemplateQueries Id; Type: DEFAULT; Schema: public; Owner: postgres
@@ -187,6 +231,15 @@ ALTER TABLE ONLY public."ReportTemplates" ALTER COLUMN "Id" SET DEFAULT nextval(
 
 
 --
+-- Data for Name: Instances; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public."Instances" ("Id", "Name") FROM stdin;
+3	anton-laptev
+\.
+
+
+--
 -- Data for Name: ReportTemplateQueries; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -198,7 +251,7 @@ COPY public."ReportTemplateQueries" ("Id", "TemplateId", "QueryText", "Name") FR
 -- Data for Name: ReportTemplateSchemes; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."ReportTemplateSchemes" ("Id", "Name") FROM stdin;
+COPY public."ReportTemplateSchemes" ("Id", "InstanceId", "Name") FROM stdin;
 \.
 
 
@@ -206,29 +259,44 @@ COPY public."ReportTemplateSchemes" ("Id", "Name") FROM stdin;
 -- Data for Name: ReportTemplates; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."ReportTemplates" ("Id", "SchemeId", "Name", "Parameters", "OdtWithoutQueries") FROM stdin;
+COPY public."ReportTemplates" ("Id", "InstanceId", "SchemeId", "Name", "Parameters", "OdtWithoutQueries") FROM stdin;
 \.
+
+
+--
+-- Name: Instances_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."Instances_Id_seq"', 4, true);
 
 
 --
 -- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."ReportTemplateQueries_Id_seq"', 1, false);
+SELECT pg_catalog.setval('public."ReportTemplateQueries_Id_seq"', 3, true);
 
 
 --
 -- Name: ReportTemplateSchemes_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."ReportTemplateSchemes_Id_seq"', 27, true);
+SELECT pg_catalog.setval('public."ReportTemplateSchemes_Id_seq"', 94, true);
 
 
 --
 -- Name: ReportTemplates_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."ReportTemplates_Id_seq"', 1, false);
+SELECT pg_catalog.setval('public."ReportTemplates_Id_seq"', 1, true);
+
+
+--
+-- Name: Instances instances_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."Instances"
+    ADD CONSTRAINT instances_pk PRIMARY KEY ("Id");
 
 
 --
@@ -256,17 +324,24 @@ ALTER TABLE ONLY public."ReportTemplateSchemes"
 
 
 --
--- Name: reporttemplatequeries_templateid_index; Type: INDEX; Schema: public; Owner: postgres
+-- Name: instances_name_uindex; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX reporttemplatequeries_templateid_index ON public."ReportTemplateQueries" USING btree ("TemplateId");
+CREATE UNIQUE INDEX instances_name_uindex ON public."Instances" USING btree ("Name");
 
 
 --
--- Name: reporttemplates_name_uindex; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplates_instanceid_index; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE UNIQUE INDEX reporttemplates_name_uindex ON public."ReportTemplates" USING btree ("Name");
+CREATE INDEX reporttemplates_instanceid_index ON public."ReportTemplates" USING btree ("InstanceId");
+
+
+--
+-- Name: reporttemplates_name_instanceid_schemeid_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX reporttemplates_name_instanceid_schemeid_uindex ON public."ReportTemplates" USING btree ("Name", "InstanceId", "SchemeId");
 
 
 --
@@ -277,10 +352,17 @@ CREATE INDEX reporttemplates_schemeid_index ON public."ReportTemplates" USING bt
 
 
 --
--- Name: reporttemplateschemes_name_uindex; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplateschemes_instanceid_index; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE UNIQUE INDEX reporttemplateschemes_name_uindex ON public."ReportTemplateSchemes" USING btree ("Name");
+CREATE INDEX reporttemplateschemes_instanceid_index ON public."ReportTemplateSchemes" USING btree ("InstanceId");
+
+
+--
+-- Name: reporttemplateschemes_name_instanceid_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX reporttemplateschemes_name_instanceid_uindex ON public."ReportTemplateSchemes" USING btree ("Name", "InstanceId");
 
 
 --
@@ -292,11 +374,27 @@ ALTER TABLE ONLY public."ReportTemplateQueries"
 
 
 --
+-- Name: ReportTemplates reporttemplates_instances_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ReportTemplates"
+    ADD CONSTRAINT reporttemplates_instances_id_fk FOREIGN KEY ("InstanceId") REFERENCES public."Instances"("Id") ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: ReportTemplates reporttemplates_reporttemplateschemes_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public."ReportTemplates"
     ADD CONSTRAINT reporttemplates_reporttemplateschemes_id_fk FOREIGN KEY ("SchemeId") REFERENCES public."ReportTemplateSchemes"("Id") ON DELETE CASCADE;
+
+
+--
+-- Name: ReportTemplateSchemes reporttemplateschemes_instances_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public."ReportTemplateSchemes"
+    ADD CONSTRAINT reporttemplateschemes_instances_id_fk FOREIGN KEY ("InstanceId") REFERENCES public."Instances"("Id") ON DELETE CASCADE;
 
 
 --
