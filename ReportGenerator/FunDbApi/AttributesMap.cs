@@ -7,7 +7,7 @@ namespace ReportGenerator.FunDbApi
 {
     public class AttributesMap 
     {
-        public string AttributeName { get; set; }
-        public dynamic Value { get; set; }
+        public string AttributeName { get; set; } = null!;
+        public dynamic Value { get; set; } = null!;
     }
 }

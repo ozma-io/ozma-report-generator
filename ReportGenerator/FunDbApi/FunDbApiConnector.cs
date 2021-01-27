@@ -97,7 +97,13 @@ namespace ReportGenerator.FunDbApi
                 var columnsNames = viewExprResult.info.columns.Select(p => p.name).ToList();
 
                 if (columnsNames.Count() == 1 && viewExprResult.result.rows.Length == 1)
-                    result = viewExprResult.result.rows[0].values[0].value;
+                {
+                    dynamic? value;
+                    if (viewExprResult.result.rows[0].values[0].pun != null)
+                        value = viewExprResult.result.rows[0].values[0].pun;
+                    else value = viewExprResult.result.rows[0].values[0].value;
+                    result = value;
+                }
                 else
                 {
                     result = new List<ExpandoObject>();
@@ -106,7 +112,10 @@ namespace ReportGenerator.FunDbApi
                         var newItem = new ExpandoObject();
                         for (var i = 0; i < columnsNames.Count(); i++)
                         {
-                            ((IDictionary<string, object>)newItem).Add(columnsNames[i], row.values[i].value);
+                            dynamic? value;
+                            if (row.values[i].pun != null) value = row.values[i].pun;
+                            else value = row.values[i].value;
+                            ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
                         }
                         ((List<ExpandoObject>)result).Add(newItem);
                     }

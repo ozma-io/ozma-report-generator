@@ -7,11 +7,11 @@ namespace ReportGenerator.FunDbApi
 {
     public class ResultColumnInfo
     {
-        public string name { get; set; }
-        public AttributeTypesMap attributeTypes { get; set; }
-        public AttributeTypesMap cellAttributeTypes { get; set; }
-        public dynamic valueType { get; set; }
+        public string name { get; set; } = null!;
+        public AttributeTypesMap attributeTypes { get; set; } = null!;
+        public AttributeTypesMap cellAttributeTypes { get; set; } = null!;
+        public dynamic valueType { get; set; } = null!;
         public dynamic? punType { get; set; }
-        public MainFieldInfo mainField { get; set; }
-}
+        public MainFieldInfo mainField { get; set; } = null!;
+    }
 }

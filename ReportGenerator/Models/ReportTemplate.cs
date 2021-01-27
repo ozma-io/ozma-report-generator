@@ -13,12 +13,12 @@ namespace ReportGenerator.Models
         public int Id { get; set; }
         public int InstanceId { get; set; }
         public int SchemeId { get; set; }
-        public string Name { get; set; }
-        public string Parameters { get; set; }
-        public byte[] OdtWithoutQueries { get; set; }
+        public string Name { get; set; } = null!;
+        public string Parameters { get; set; } = null!;
+        public byte[] OdtWithoutQueries { get; set; } = null!;
 
-        public virtual Instance Instance { get; set; }
-        public virtual ReportTemplateScheme Scheme { get; set; }
+        public virtual Instance Instance { get; set; } = null!;
+        public virtual ReportTemplateScheme Scheme { get; set; } = null!;
         public virtual ICollection<ReportTemplateQuery> ReportTemplateQueries { get; set; }
     }
 }

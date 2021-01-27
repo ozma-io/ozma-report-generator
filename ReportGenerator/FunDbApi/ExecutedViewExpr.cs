@@ -7,8 +7,8 @@ namespace ReportGenerator.FunDbApi
 {
     public class ExecutedViewExpr
     {
-        public AttributesMap attributes { get; set; }
-        public AttributesMap[] columnAttributes { get; set; }
-        public ExecutedRow[] rows { get; set; }
+        public AttributesMap attributes { get; set; } = null!;
+        public AttributesMap[] columnAttributes { get; set; } = null!;
+        public ExecutedRow[] rows { get; set; } = null!;
     }
 }

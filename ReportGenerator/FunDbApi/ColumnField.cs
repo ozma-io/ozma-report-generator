@@ -7,9 +7,9 @@ namespace ReportGenerator.FunDbApi
 {
     public class ColumnField
     {
-        public dynamic fieldType { get; set; }
-        public dynamic valueType { get; set; }
-        public dynamic defaultValue { get; set; }
+        public dynamic fieldType { get; set; } = null!;
+        public dynamic valueType { get; set; } = null!;
+        public dynamic defaultValue { get; set; } = null!;
         public bool isNullable { get; set; }
         public bool isImmutable { get; set; }
         public EntityRef? inheritedFrom { get; set; }

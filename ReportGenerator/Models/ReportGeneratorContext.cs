@@ -15,11 +15,11 @@ namespace ReportGenerator.Models
         {
         }
 
-        public virtual DbSet<Instance> Instances { get; set; }
-        public virtual DbSet<ReportTemplate> ReportTemplates { get; set; }
-        public virtual DbSet<ReportTemplateQuery> ReportTemplateQueries { get; set; }
-        public virtual DbSet<ReportTemplateScheme> ReportTemplateSchemes { get; set; }
-        public virtual DbSet<VReportTemplate> VReportTemplates { get; set; }
+        public virtual DbSet<Instance> Instances { get; set; } = null!;
+        public virtual DbSet<ReportTemplate> ReportTemplates { get; set; } = null!;
+        public virtual DbSet<ReportTemplateQuery> ReportTemplateQueries { get; set; } = null!;
+        public virtual DbSet<ReportTemplateScheme> ReportTemplateSchemes { get; set; } = null!;
+        public virtual DbSet<VReportTemplate> VReportTemplates { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

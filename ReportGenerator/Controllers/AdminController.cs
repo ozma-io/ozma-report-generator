@@ -49,9 +49,16 @@ namespace ReportGenerator.Controllers
 
             ViewBag.instanceName = instanceName;
             var list = new List<ReportTemplateScheme>();
-            using (var repository = new ReportTemplateSchemeRepository(instanceName))
+            try
             {
-                list = await repository.LoadAllSchemes();
+                using (var repository = new ReportTemplateSchemeRepository(instanceName))
+                {
+                    list = await repository.LoadAllSchemes();
+                }
+            }
+            catch
+            {
+                return Unauthorized();
             }
             var selectList = new SelectList(list, "Id", "Name");
             ViewBag.SchemeId = selectList;

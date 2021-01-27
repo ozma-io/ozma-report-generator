@@ -12,9 +12,9 @@ namespace ReportGenerator.Models
 
         public int Id { get; set; }
         public int InstanceId { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
-        public virtual Instance Instance { get; set; }
+        public virtual Instance Instance { get; set; } = null!;
         public virtual ICollection<ReportTemplate> ReportTemplates { get; set; }
     }
 }

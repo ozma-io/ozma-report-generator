@@ -7,9 +7,9 @@ namespace ReportGenerator.Models
     {
         public int Id { get; set; }
         public int TemplateId { get; set; }
-        public string QueryText { get; set; }
-        public string Name { get; set; }
+        public string QueryText { get; set; } = null!;
+        public string Name { get; set; } = null!;
 
-        public virtual ReportTemplate Template { get; set; }
+        public virtual ReportTemplate Template { get; set; } = null!;
     }
 }

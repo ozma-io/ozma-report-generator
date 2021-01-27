@@ -13,7 +13,7 @@ namespace ReportGenerator.Models
         }
 
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public virtual ICollection<ReportTemplateScheme> ReportTemplateSchemes { get; set; }
         public virtual ICollection<ReportTemplate> ReportTemplates { get; set; }
