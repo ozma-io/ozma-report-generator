@@ -7,7 +7,7 @@ namespace ReportGenerator.Repositories
     public abstract class Repository : IDisposable
     {
         protected ReportGeneratorContext dbContext;
-        protected readonly Instance instance;
+        protected readonly Instance instance = null!;
 
         public void Dispose()
         {
@@ -21,7 +21,13 @@ namespace ReportGenerator.Repositories
             dbContext = new ReportGeneratorContext();
             var instance = dbContext.Instances.FirstOrDefault(p => p.Name == instanceName);
             if (instance == null)
-                throw new Exception("Instance " + instanceName + " not found in database");
+            {
+                //throw new Exception("Instance " + instanceName + " not found in database");
+                var newInstance = new Instance {Name = instanceName};
+                dbContext.Instances.AddAsync(newInstance);
+                dbContext.SaveChangesAsync();
+                instance = newInstance;
+            }
             this.instance = instance;
         }
     }

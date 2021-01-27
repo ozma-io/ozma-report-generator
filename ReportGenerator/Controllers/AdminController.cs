@@ -45,7 +45,7 @@ namespace ReportGenerator.Controllers
                 throw new Exception("Instance name cannot be empty");
 
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            if (!hasAdminRights) return Unauthorized("User has no admin rights for this instance");
 
             ViewBag.instanceName = instanceName;
             var list = new List<ReportTemplateScheme>();
