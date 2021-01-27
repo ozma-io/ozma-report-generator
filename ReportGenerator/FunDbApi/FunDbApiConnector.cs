@@ -58,16 +58,19 @@ namespace ReportGenerator.FunDbApi
 
         public async Task<bool> GetUserIsAdmin()
         {
-            var values = new Dictionary<string, object>
-            {
-                //{"name", "\"" +configuration["AuthSettings:UserName"] + "\""}
-            };
-            var query = await LoadQueryAnonymous("SELECT is_root FROM public.users WHERE id = $$user_id", values);
-            if (query == true) return true;
+            var values = new Dictionary<string, object>();
+            //var query = await LoadQueryAnonymous("SELECT is_root FROM public.users WHERE id = $$user_id", values);
+            //if (query == true) return true;
+            //else return false;
+            var request = PrepareRequest(values);
+            var client = new RestClient(GetApiUrl() + "/permissions");
+            var response = await client.ExecuteAsync(request);
+            var responseJson = response.Content;
+            if (responseJson == "{\"isRoot\":true}") return true;
             else return false;
         }
 
-        private RestRequest PrepareRequest(string token, Dictionary<string, object> parameterValues)
+        private RestRequest PrepareRequest(Dictionary<string, object> parameterValues)
         {
             var request = new RestRequest(Method.GET);
             request.AddHeader("cache-control", "no-cache");
@@ -133,7 +136,7 @@ namespace ReportGenerator.FunDbApi
             dynamic? result = null;
             if (!string.IsNullOrEmpty(token))
             {
-                var request = PrepareRequest(token, parameterValues);
+                var request = PrepareRequest(parameterValues);
                 request.AddParameter("__query", queryText, ParameterType.QueryString);
                 result = await ExecuteRequest(GetApiUrl() + "/views/anonymous/entries", request);
             }
@@ -145,7 +148,7 @@ namespace ReportGenerator.FunDbApi
             dynamic? result = null;
             if (!string.IsNullOrEmpty(token))
             {
-                var request = PrepareRequest(token, parameterValues);
+                var request = PrepareRequest(parameterValues);
                 if (!queryText.EndsWith("/entries")) queryText = queryText + "/entries";
                 result = await ExecuteRequest(GetApiUrl() + queryText, request);
             }

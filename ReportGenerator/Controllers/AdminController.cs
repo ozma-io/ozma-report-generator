@@ -56,9 +56,9 @@ namespace ReportGenerator.Controllers
                     list = await repository.LoadAllSchemes();
                 }
             }
-            catch
+            catch (Exception exception)
             {
-                return Unauthorized();
+                return NotFound(exception.Message);
             }
             var selectList = new SelectList(list, "Id", "Name");
             ViewBag.SchemeId = selectList;

@@ -35,8 +35,6 @@ namespace ReportGenerator.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
-
             modelBuilder.Entity<Instance>(entity =>
             {
                 entity.HasIndex(e => e.Name, "instances_name_uindex")
