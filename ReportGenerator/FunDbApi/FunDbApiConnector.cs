@@ -28,7 +28,8 @@ namespace ReportGenerator.FunDbApi
 
         private string GetApiUrl()
         {
-            return "https://" + instanceName + ".api.ozma.org";
+            var dbUrl = configuration["FunDbSettings:DatabaseServerUrl"];
+            return dbUrl.Replace("{instanceName}", instanceName);
         }
 
         //private async Task<string> GetToken()

@@ -24,10 +24,11 @@ namespace ReportGenerator.Repositories
             {
                 //throw new Exception("Instance " + instanceName + " not found in database");
                 var newInstance = new Instance {Name = instanceName};
-                dbContext.Instances.AddAsync(newInstance);
-                dbContext.SaveChangesAsync();
+                dbContext.Instances.Add(newInstance);
+                dbContext.SaveChanges();
                 instance = newInstance;
             }
+
             this.instance = instance;
         }
     }
