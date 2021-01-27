@@ -38,7 +38,7 @@ namespace ReportGenerator
                         options.ClientSecret = Configuration["AuthSettings:ClientSecret"];
                         options.Authority = Configuration["AuthSettings:OpenIdConnectUrl"];
                         options.SaveTokens = true;
-                        options.RequireHttpsMetadata = false;
+                        options.RequireHttpsMetadata = !Environment.IsDevelopment();
                         options.ResponseType = "code";
                         options.GetClaimsFromUserInfoEndpoint = true;
                         options.Scope.Clear();
@@ -60,12 +60,9 @@ namespace ReportGenerator
             else
             {
                 app.UseExceptionHandler("/Admin/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
             }
             app.UseStatusCodePages();
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
