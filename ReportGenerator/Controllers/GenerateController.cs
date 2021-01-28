@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using ReportGenerator.Models;
 using ReportGenerator.Repositories;
@@ -14,25 +14,33 @@ namespace ReportGenerator.Controllers
     [ApiController]
     public class GenerateController : BaseController
     {
-        private readonly ILogger<GenerateController> _logger;
-
-        public GenerateController(ILogger<GenerateController> logger)
+        public GenerateController(IConfiguration configuration) : base(configuration)
         {
-            _logger = logger;
         }
 
         [HttpGet]
-        [Route("api/{instanceName}/{templateName}/generate")]
-        public async Task<FileResult?> Get(string instanceName, string templateName, int? count, string? format)
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/odt")]
+        public async Task<FileResult?> GetOdt(string instanceName, string schemaName, string templateName)
         {
-            return await GenerateTemplate(instanceName, templateName, count, format);
+            return await GenerateTemplate(instanceName, schemaName, templateName, "odt");
         }
 
-        private async Task<FileResult?> GenerateTemplate(string instanceName, string templateName, int? count, string? format)
+        [HttpGet]
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/pdf")]
+        public async Task<FileResult?> GetPdf(string instanceName, string schemaName, string templateName)
+        {
+            return await GenerateTemplate(instanceName, schemaName, templateName, "pdf");
+        }
+
+        private async Task<FileResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string? format)
         {
             if (string.IsNullOrEmpty(instanceName))
             {
                 throw new Exception("No InstanceName specified");
+            }
+            if (string.IsNullOrEmpty(schemaName))
+            {
+                throw new Exception("No SchemaName specified");
             }
             if (string.IsNullOrEmpty(templateName))
             {
@@ -43,22 +51,22 @@ namespace ReportGenerator.Controllers
             var requestQuery = HttpContext.Request.Query;
             foreach (var queryParam in requestQuery)
             {
-                if ((queryParam.Key != "templateName") && (queryParam.Key != "format") && (queryParam.Key != "count"))
-                    paramsWithValues.Add(queryParam.Key, queryParam.Value.ToString());
+                paramsWithValues.Add(queryParam.Key, queryParam.Value.ToString());
             }
 
             ReportTemplate? template = null;
-            using (var repository = new ReportTemplateRepository(instanceName))
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-                template = await repository.LoadTemplate(templateName);
+                template = await repository.LoadTemplate(schemaName, templateName);
             }
             if (template == null)
             {
                 throw new Exception("Template '" + templateName + "' not found");
             }
 
-            var token = await GetToken();
-            var generatedReport = await ReportTemplateFunctions.GenerateReport(template, paramsWithValues, instanceName, token);
+            var tokenProcessor = await CreateTokenProcessor();
+            var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
+            var generatedReport = await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
             if (generatedReport != null)
             {
                 byte[] bytes;

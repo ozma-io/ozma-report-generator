@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using ReportGenerator.Models;
 using ReportGenerator.Repositories;
 using Sandwych.Reporting.OpenDocument;
@@ -17,11 +17,8 @@ namespace ReportGenerator.Controllers
 {
     public class AdminController : BaseController
     {
-        private readonly ILogger<AdminController> _logger;
-
-        public AdminController(ILogger<AdminController> logger)
+        public AdminController(IConfiguration configuration) : base(configuration)
         {
-            _logger = logger;
         }
 
         [AllowAnonymous]
@@ -33,9 +30,29 @@ namespace ReportGenerator.Controllers
 
         private async Task<bool> HasAdminRightsForInstance(string instanceName)
         {
-            var token = await GetToken();
-            var adminRights = await new FunDbApi.FunDbApiConnector(instanceName, token).GetUserIsAdmin();
+            var tokenProcessor = await CreateTokenProcessor();
+            var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
+            var adminRights = await funDbApiConnector.GetUserIsAdmin();
             return adminRights;
+        }
+
+        private async Task<SelectList> LoadSchemaNamesList(string instanceName)
+        {
+            var list = new List<ReportTemplateSchema>();
+            using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
+            {
+                list = await repository.LoadAllSchemas();
+            }
+            var selectList = new SelectList(list, "Id", "Name");
+            return selectList;
+        }
+
+        [HttpGet]
+        [Route("admin/{instanceName}/GetSchemaNamesList")]
+        public async Task<JsonResult> GetSchemaNamesList(string instanceName)
+        {
+            var selectList = await LoadSchemaNamesList(instanceName);
+            return Json(selectList);
         }
 
         [Route("admin/{instanceName}")]
@@ -47,21 +64,8 @@ namespace ReportGenerator.Controllers
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized("User has no admin rights for this instance");
 
+            ViewBag.SchemaId = await LoadSchemaNamesList(instanceName);
             ViewBag.instanceName = instanceName;
-            var list = new List<ReportTemplateScheme>();
-            try
-            {
-                using (var repository = new ReportTemplateSchemeRepository(instanceName))
-                {
-                    list = await repository.LoadAllSchemes();
-                }
-            }
-            catch (Exception exception)
-            {
-                return NotFound(exception.Message);
-            }
-            var selectList = new SelectList(list, "Id", "Name");
-            ViewBag.SchemeId = selectList;
             return View();
         }
 
@@ -72,33 +76,33 @@ namespace ReportGenerator.Controllers
 
         #region Схемы шаблонов 
         [HttpGet]
-        [Route("admin/{instanceName}/LoadSchemes")]
-        public async Task<IActionResult> LoadSchemes(string instanceName)
+        [Route("admin/{instanceName}/LoadSchemas")]
+        public async Task<IActionResult> LoadSchemas(string instanceName)
         {
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized();
 
-            var list = new List<ReportTemplateScheme>();
-            using (var repository = new ReportTemplateSchemeRepository(instanceName))
+            var list = new List<ReportTemplateSchema>();
+            using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
-                list = await repository.LoadAllSchemes();
+                list = await repository.LoadAllSchemas();
             }
-            return PartialView("~/Views/Admin/PartialViews/SchemesListPartial.cshtml", list);
+            return PartialView("~/Views/Admin/PartialViews/SchemasListPartial.cshtml", list);
         }
 
         [HttpPost]
-        [Route("admin/{instanceName}/AddScheme")]
-        public async Task<IActionResult> AddScheme(string instanceName, ReportTemplateScheme model)
+        [Route("admin/{instanceName}/AddSchema")]
+        public async Task<IActionResult> AddSchema(string instanceName, ReportTemplateSchema model)
         {
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized();
 
-            using (var repository = new ReportTemplateSchemeRepository(instanceName))
+            using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
                 try
                 {
                     model.Name = RemoveRestrictedSymbols(model.Name);
-                    await repository.AddScheme(model);
+                    await repository.AddSchema(model);
                     return Ok();
                 }
                 catch (Exception e)
@@ -112,17 +116,17 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpDelete]
-        [Route("admin/{instanceName}/DeleteScheme")]
-        public async Task<IActionResult> DeleteScheme(string instanceName, int id)
+        [Route("admin/{instanceName}/DeleteSchema")]
+        public async Task<IActionResult> DeleteSchema(string instanceName, int id)
         {
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized();
 
-            using (var repository = new ReportTemplateSchemeRepository(instanceName))
+            using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
                 try
                 {
-                    await repository.DeleteScheme(id);
+                    await repository.DeleteSchema(id);
                     return Ok();
                 }
                 catch (Exception e)
@@ -145,7 +149,7 @@ namespace ReportGenerator.Controllers
             if (!hasAdminRights) return Unauthorized();
 
             var list = new List<VReportTemplate>();
-            using (var repository = new ReportTemplateRepository(instanceName))
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
                 list = await repository.LoadAllTemplates();
             }
@@ -183,7 +187,7 @@ namespace ReportGenerator.Controllers
                 await odtWithoutQueries.SaveAsync(stream);
                 model.OdtWithoutQueries = stream.ToArray();
             }
-            using (var repository = new ReportTemplateRepository(instanceName))
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
                 try
                 {
@@ -208,7 +212,7 @@ namespace ReportGenerator.Controllers
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized();
 
-            using (var repository = new ReportTemplateRepository(instanceName))
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
                 try
                 {

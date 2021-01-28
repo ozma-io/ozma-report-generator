@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 using ReportGenerator.Models;
 
 namespace ReportGenerator.Repositories
@@ -14,11 +15,11 @@ namespace ReportGenerator.Repositories
             dbContext.Dispose();
         }
 
-        public Repository(string instanceName)
+        public Repository(IConfiguration configuration, string instanceName)
         {
             if (string.IsNullOrEmpty(instanceName))
                 throw new Exception("Instance name cannot be empty");
-            dbContext = new ReportGeneratorContext();
+            dbContext = new ReportGeneratorContext(configuration);
             var instance = dbContext.Instances.FirstOrDefault(p => p.Name == instanceName);
             if (instance == null)
             {

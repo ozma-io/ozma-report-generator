@@ -12,26 +12,26 @@ namespace ReportGenerator
 {
     public static class ReportTemplateFunctions
     {
-        private static Dictionary<string, string> GetParameters(ReportTemplate template)
-        {
-            var result = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(template.Parameters))
-            {
-                var list = template.Parameters.Replace(" ", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var item in list)
-                {
-                    var nameAndType = item.Split(':');
-                    if (nameAndType.Count() == 2)
-                    {
-                        var parameterName = nameAndType[0];
-                        var parameterType = nameAndType[1];
-                        if (!result.Any(p => p.Key == parameterName))
-                            result.Add(parameterName, parameterType);
-                    }
-                }
-            }
-            return result;
-        }
+        //private static Dictionary<string, string> GetParameters(ReportTemplate template)
+        //{
+        //    var result = new Dictionary<string, string>();
+        //    if (!string.IsNullOrEmpty(template.Parameters))
+        //    {
+        //        var list = template.Parameters.Replace(" ", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
+        //        foreach (var item in list)
+        //        {
+        //            var nameAndType = item.Split(':');
+        //            if (nameAndType.Count() == 2)
+        //            {
+        //                var parameterName = nameAndType[0];
+        //                var parameterType = nameAndType[1];
+        //                if (!result.Any(p => p.Key == parameterName))
+        //                    result.Add(parameterName, parameterType);
+        //            }
+        //        }
+        //    }
+        //    return result;
+        //}
 
         private static List<FunDbQuery> GetQueriesAsFunDb(ReportTemplate template)
         {
@@ -57,26 +57,26 @@ namespace ReportGenerator
             return odt;
         }
 
-        public static async Task<OdfDocument?> GenerateReport(ReportTemplate template, Dictionary<string, object> parametersWithValues, string instanceName, string token)
+        public static async Task<OdfDocument?> GenerateReport(FunDbApiConnector funDbApiConnector, ReportTemplate template, Dictionary<string, object> parametersWithValues)
         {
-            var parameters = GetParameters(template);
-            OdfDocument? result = null;
-            foreach (var parameterName in parameters.Select(p => p.Key))
-            {
-                var passedParameterWithValue = parametersWithValues.FirstOrDefault(p => p.Key == parameterName);
-                if ((passedParameterWithValue.Key == null) || (passedParameterWithValue.Value == null))
-                {
-                    throw new Exception("No value passed for required parameter $" + parameterName);
-                }
-            }
+            //var parameters = GetParameters(template);
+            //foreach (var parameterName in parameters.Select(p => p.Key))
+            //{
+            //    var passedParameterWithValue = parametersWithValues.FirstOrDefault(p => p.Key == parameterName);
+            //    if ((passedParameterWithValue.Key == null) || (passedParameterWithValue.Value == null))
+            //    {
+            //        throw new Exception("No value passed for required parameter $" + parameterName);
+            //    }
+            //}
 
+            OdfDocument? result = null;
             var odtWithoutQueries = await PrepareOdtWithoutQueries(template);
             var queriesFromOdt = GetQueriesAsFunDb(template);
             if (!queriesFromOdt.Any()) return odtWithoutQueries;
 
             foreach (var funDbQuery in queriesFromOdt)
             {
-                await funDbQuery.LoadDataAsync(parametersWithValues, instanceName, token);
+                await funDbApiConnector.LoadQuery(funDbQuery, parametersWithValues);
             }
 
             var loadedQueries = queriesFromOdt.Where(p => p.IsLoaded).ToList();
@@ -85,17 +85,19 @@ namespace ReportGenerator
                 var data = new Dictionary<string, object>();
                 foreach (var parameterWithValue in parametersWithValues)
                 {
-                    if (parameters.Any(p => p.Key == parameterWithValue.Key))
-                    {
-                        if (!data.Any(p => p.Key == parameterWithValue.Key))
-                            data.Add(parameterWithValue.Key, parameterWithValue.Value);
-                    }
+                    //if (parameters.Any(p => p.Key == parameterWithValue.Key))
+                    //{
+                    if (!data.Any(p => p.Key == parameterWithValue.Key))
+                        data.Add(parameterWithValue.Key, parameterWithValue.Value);
+                    //}
                 }
+
                 foreach (var loadedQuery in loadedQueries)
                 {
                     if (loadedQuery.Result != null)
                         data.Add(loadedQuery.Name, loadedQuery.Result);
                 }
+
                 if (odtWithoutQueries != null)
                 {
                     var context = new TemplateContext(data);
@@ -107,6 +109,7 @@ namespace ReportGenerator
             {
                 throw new Exception("One or more FunDb query failed");
             }
+
             return result;
         }
     }

@@ -1,4 +1,4 @@
-﻿@model List<ReportGenerator.Models.ReportTemplateScheme>
+﻿@model List<ReportGenerator.Models.ReportTemplateSchema>
 <thead>
 <tr>
     <th>Название</th>
@@ -10,7 +10,7 @@
     {
         <tr>
             <td>@item.Name</td>
-            <td><button type="button" class="btn btn-danger" onclick="Delete('Scheme', @item.Id) ">Удалить</button></td>
+            <td><button type="button" class="btn btn-danger" onclick="Delete('Schema', @item.Id); ">Удалить</button></td>
         </tr>
     }
 </tbody>

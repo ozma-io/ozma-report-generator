@@ -21,6 +21,9 @@ function Add(objectName) {
             contentType: "application/x-www-form-urlencoded; charset=UTF-8",
             data: data
         }).done(function () {
+            if (objectName == "Schema") {
+                LoadSchemaNamesList();
+            }
             LoadList(objectName);
             modalWindow.modal('hide');
             form.find("input[type=text], textarea").val("");
@@ -60,12 +63,31 @@ function Delete(objectName, id) {
             id: id
         }
     }).done(function () {
+        if (objectName == "Schema") {
+            LoadSchemaNamesList();
+        }
         LoadList(objectName);
     }).fail(function (msg) {
         ShowErrorMessage('Ошибка: ' + msg.responseText);
     });
 }
+function LoadSchemaNamesList() {
+    var url = "/Admin/" + instanceName + "/GetSchemaNamesList";
+    $.ajax({
+        url: url,
+        method: "GET",
+        dataType: 'json',
+    }).done(function (response) {
+        $('#SchemaId').html("");
+        var options = '';
+        for (var i = 0; i < response.length; i++) {
+            options += '<option value="' + response[i].value + '">' + response[i].text + '</option>';
+        }
+        $('#SchemaId').append(options);  
+    });
+}
 $(document).ready(function () {
-    LoadList("Scheme");
+    LoadList("Schema");
     LoadList("Template");
+    LoadSchemaNamesList();
 });

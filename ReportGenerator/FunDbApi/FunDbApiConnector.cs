@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Security.Authentication;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -13,16 +12,13 @@ namespace ReportGenerator.FunDbApi
     public class FunDbApiConnector
     {
         private readonly IConfiguration configuration;
-        private readonly string token;
+        private readonly TokenProcessor tokenProcessor;
         private readonly string instanceName;
 
-        public FunDbApiConnector(string instanceName, string token)
+        public FunDbApiConnector(IConfiguration configuration, string instanceName, TokenProcessor tokenProcessor)
         {
-            configuration = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json")
-                .Build();
-            this.token = token;
+            this.configuration = configuration;
+            this.tokenProcessor = tokenProcessor;
             this.instanceName = instanceName;
         }
 
@@ -32,43 +28,31 @@ namespace ReportGenerator.FunDbApi
             return dbUrl.Replace("{instanceName}", instanceName);
         }
 
-        //private async Task<string> GetToken()
-        //{
-        //    const string userName = "anton.laptev@gmail.com";
-        //    const string password = "testpwd";
-        //    var client = new RestClient(configuration["AuthSettings:OpenIdConnectUrl"] + "token");
-        //    var request = new RestRequest(Method.POST);
-        //    request.AddHeader("cache-control", "no-cache");
-        //    request.AddHeader("content-type", "application/x-www-form-urlencoded");
-        //    request.AddParameter("application/x-www-form-urlencoded",
-        //        "grant_type=password" +
-        //        "&client_id=" + configuration["AuthSettings:ClientId"] +
-        //        "&client_secret=" + configuration["AuthSettings:ClientSecret"] +
-        //        "&username=" + userName +
-        //        "&password=" + password,
-        //        ParameterType.RequestBody);
-        //    IRestResponse response = await client.ExecuteAsync(request);
-        //    var responseJson = response.Content;
-        //    var token = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseJson)["access_token"].ToString();
-        //    if (string.IsNullOrEmpty(token))
-        //    {
-        //        throw new AuthenticationException("ozma.io API authentication failed.");
-        //    }
-        //    return token;
-        //}
-
-        public async Task<bool> GetUserIsAdmin()
+        public async Task<bool> GetUserIsAdmin(int retryCount = 0)
         {
             var values = new Dictionary<string, object>();
-            //var query = await LoadQueryAnonymous("SELECT is_root FROM public.users WHERE id = $$user_id", values);
-            //if (query == true) return true;
-            //else return false;
             var request = PrepareRequest(values);
             var client = new RestClient(GetApiUrl() + "/permissions");
             var response = await client.ExecuteAsync(request);
-            var responseJson = response.Content;
-            if (responseJson == "{\"isRoot\":true}") return true;
-            else return false;
+            switch (response.StatusCode)
+            {
+                case System.Net.HttpStatusCode.OK:
+                    var responseJson = response.Content;
+                    var permissions = JsonConvert.DeserializeObject<PermissionsResponseJson>(responseJson);
+                    return permissions.IsRoot;
+                case System.Net.HttpStatusCode.Forbidden:
+                    return false;
+                case System.Net.HttpStatusCode.Unauthorized:
+                    if (retryCount == 0)
+                    {
+                        retryCount++;
+                        await tokenProcessor.RefreshToken();
+                        return await GetUserIsAdmin(retryCount);
+                    }
+                    else throw new Exception("Getting /permissions error: Unauthorized. " + response.Content);
+                default:
+                    throw new Exception("Getting /permissions error. Response status code: " + response.StatusCode);
+            }
         }
 
         private RestRequest PrepareRequest(Dictionary<string, object> parameterValues)
@@ -76,7 +60,7 @@ namespace ReportGenerator.FunDbApi
             var request = new RestRequest(Method.GET);
             request.AddHeader("cache-control", "no-cache");
             request.AddHeader("content-type", "application/x-www-form-urlencoded");
-            request.AddHeader("authorization", "Bearer " + token);
+            request.AddHeader("authorization", "Bearer " + tokenProcessor.AccessToken);
             foreach (var parameterValue in parameterValues)
             {
                 if (parameterValue.Value != null)
@@ -89,53 +73,67 @@ namespace ReportGenerator.FunDbApi
             return request;
         }
 
-        private async Task<dynamic?> ExecuteRequest(string url, RestRequest request)
+        private async Task<dynamic?> ExecuteRequest(string url, RestRequest request, int retryCount = 0)
         {
             dynamic? result = null;
             var client = new RestClient(url);
             var response = await client.ExecuteAsync(request);
-            var responseJson = response.Content;
-            var viewExprResult = JsonConvert.DeserializeObject<ViewExprResult>(responseJson);
-            if (viewExprResult?.info != null && viewExprResult.result != null)
+            switch (response.StatusCode)
             {
-                var columnsNames = viewExprResult.info.columns.Select(p => p.name).ToList();
-
-                if (columnsNames.Count() == 1 && viewExprResult.result.rows.Length == 1)
-                {
-                    dynamic? value;
-                    if (viewExprResult.result.rows[0].values[0].pun != null)
-                        value = viewExprResult.result.rows[0].values[0].pun;
-                    else value = viewExprResult.result.rows[0].values[0].value;
-                    result = value;
-                }
-                else
-                {
-                    result = new List<ExpandoObject>();
-                    foreach (var row in viewExprResult.result.rows)
+                case System.Net.HttpStatusCode.OK:
+                    var responseJson = response.Content;
+                    var viewExprResult = JsonConvert.DeserializeObject<ViewExprResult>(responseJson);
+                    if (viewExprResult?.info != null && viewExprResult.result != null)
                     {
-                        var newItem = new ExpandoObject();
-                        for (var i = 0; i < columnsNames.Count(); i++)
+                        var columnsNames = viewExprResult.info.columns.Select(p => p.name).ToList();
+
+                        if (columnsNames.Count() == 1 && viewExprResult.result.rows.Length == 1)
                         {
                             dynamic? value;
-                            if (row.values[i].pun != null) value = row.values[i].pun;
-                            else value = row.values[i].value;
-                            ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
+                            if (viewExprResult.result.rows[0].values[0].pun != null)
+                                value = viewExprResult.result.rows[0].values[0].pun;
+                            else value = viewExprResult.result.rows[0].values[0].value;
+                            result = value;
                         }
-                        ((List<ExpandoObject>)result).Add(newItem);
+                        else
+                        {
+                            result = new List<ExpandoObject>();
+                            foreach (var row in viewExprResult.result.rows)
+                            {
+                                var newItem = new ExpandoObject();
+                                for (var i = 0; i < columnsNames.Count(); i++)
+                                {
+                                    dynamic? value;
+                                    if (row.values[i].pun != null) value = row.values[i].pun;
+                                    else value = row.values[i].value;
+                                    ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
+                                }
+                                ((List<ExpandoObject>)result).Add(newItem);
+                            }
+                        }
                     }
-                }
+                    else
+                    {
+                        throw new Exception("FunDb query execution error " + responseJson);
+                    }
+                    return result;
+                case System.Net.HttpStatusCode.Unauthorized:
+                    if (retryCount == 0)
+                    {
+                        retryCount++;
+                        await tokenProcessor.RefreshToken();
+                        return await ExecuteRequest(url, request, retryCount);
+                    }
+                    else throw new Exception("FunDb query execution error: Unauthorized. " + response.Content);
+                default:
+                    throw new Exception("FunDb query execution error. Response status code: " + response.StatusCode);
             }
-            else
-            {
-                throw new Exception("FunDb query execution error " + responseJson);
-            }
-            return result;
         }
 
-        public async Task<dynamic?> LoadQueryAnonymous(string queryText, Dictionary<string, object> parameterValues)
+        private async Task<dynamic?> LoadQueryAnonymous(string queryText, Dictionary<string, object> parameterValues)
         {
             dynamic? result = null;
-            if (!string.IsNullOrEmpty(token))
+            if (!string.IsNullOrEmpty(tokenProcessor.AccessToken))
             {
                 var request = PrepareRequest(parameterValues);
                 request.AddParameter("__query", queryText, ParameterType.QueryString);
@@ -144,16 +142,27 @@ namespace ReportGenerator.FunDbApi
             return result;
         }
 
-        public async Task<dynamic?> LoadQueryNamed(string queryText, Dictionary<string, object> parameterValues)
+        private async Task<dynamic?> LoadQueryNamed(string queryText, Dictionary<string, object> parameterValues)
         {
             dynamic? result = null;
-            if (!string.IsNullOrEmpty(token))
+            if (!string.IsNullOrEmpty(tokenProcessor.AccessToken))
             {
                 var request = PrepareRequest(parameterValues);
                 if (!queryText.EndsWith("/entries")) queryText = queryText + "/entries";
                 result = await ExecuteRequest(GetApiUrl() + queryText, request);
             }
             return result;
+        }
+
+        public async Task LoadQuery(FunDbQuery query, Dictionary<string, object> queryParametersWithValues)
+        {
+            var queryTextToRun = query.QueryTextWithoutParameterValues;
+            dynamic? result = null;
+            if (queryTextToRun.StartsWith("/views/"))
+                result = await LoadQueryNamed(queryTextToRun, queryParametersWithValues);
+            else
+                result = await LoadQueryAnonymous(queryTextToRun, queryParametersWithValues);
+            query.SetResult(result);
         }
     }
 }

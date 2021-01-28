@@ -1,17 +1,22 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace ReportGenerator.Controllers
 {
     [Authorize]
     public abstract class BaseController : Controller
     {
-        protected async Task<string> GetToken()
+        protected IConfiguration configuration;
+        public BaseController(IConfiguration configuration)
         {
-            return await HttpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
+            this.configuration = configuration;
+        }
+
+        protected async Task<TokenProcessor> CreateTokenProcessor()
+        {
+            return await TokenProcessor.Create(configuration, HttpContext);
         }
     }
 }

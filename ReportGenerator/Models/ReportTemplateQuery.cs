@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ReportGenerator.Models
+﻿namespace ReportGenerator.Models
 {
     public partial class ReportTemplateQuery
     {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ReportGenerator.Models
 {
@@ -11,14 +10,11 @@ namespace ReportGenerator.Models
         }
 
         public int Id { get; set; }
-        public int InstanceId { get; set; }
-        public int SchemeId { get; set; }
+        public int SchemaId { get; set; }
         public string Name { get; set; } = null!;
-        public string Parameters { get; set; } = null!;
         public byte[] OdtWithoutQueries { get; set; } = null!;
 
-        public virtual Instance Instance { get; set; } = null!;
-        public virtual ReportTemplateScheme Scheme { get; set; } = null!;
+        public virtual ReportTemplateSchema Schema { get; set; } = null!;
         public virtual ICollection<ReportTemplateQuery> ReportTemplateQueries { get; set; }
     }
 }

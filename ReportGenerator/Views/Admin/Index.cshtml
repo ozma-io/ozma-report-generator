@@ -3,11 +3,11 @@
 }
 <div class="text-left">
     <h1 class="display-4">Схемы шаблонов</h1>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addSchemeModal">Добавить схему &raquo;</button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addSchemaModal">Добавить схему &raquo;</button>
     <br />
     <br />
     <div class="form-group">
-        <table id="tableMainListSchemes" class="table">
+        <table id="tableMainListSchemas" class="table">
         </table>
     </div>
 </div>
@@ -21,7 +21,7 @@
         </table>
     </div>
 </div>
-@await Html.PartialAsync("~/Views/Admin/PartialViews/AddSchemePartial.cshtml")
+@await Html.PartialAsync("~/Views/Admin/PartialViews/AddSchemaPartial.cshtml")
 @await Html.PartialAsync("~/Views/Admin/PartialViews/AddTemplatePartial.cshtml")
 @section scripts
 {

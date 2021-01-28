@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ReportGenerator.Models
 {
-    public partial class ReportTemplateScheme
+    public partial class ReportTemplateSchema
     {
-        public ReportTemplateScheme()
+        public ReportTemplateSchema()
         {
             ReportTemplates = new HashSet<ReportTemplate>();
         }

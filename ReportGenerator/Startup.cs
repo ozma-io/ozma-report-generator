@@ -1,4 +1,9 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
@@ -30,7 +35,53 @@ namespace ReportGenerator
                     options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
                 })
-                .AddCookie()
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.Events = new CookieAuthenticationEvents
+                    {
+                        OnValidatePrincipal = async x =>
+                        {
+                            if ((x.Properties.IssuedUtc != null) && (x.Properties.ExpiresUtc != null))
+                            {
+                                var now = DateTimeOffset.UtcNow;
+                                var timeElapsed = now.Subtract(x.Properties.IssuedUtc.Value);
+                                var timeRemaining = x.Properties.ExpiresUtc.Value.Subtract(now);
+
+                                if (timeElapsed > timeRemaining)
+                                {
+                                    var identity = (ClaimsIdentity) x.Principal.Identity;
+                                    var accessTokenClaim = identity.FindFirst("access_token");
+                                    var refreshTokenClaim = identity.FindFirst("refresh_token");
+
+                                    var refreshToken = refreshTokenClaim.Value;
+                                    var response = await new HttpClient().RequestRefreshTokenAsync(
+                                        new RefreshTokenRequest
+                                        {
+                                            Address = Configuration["AuthSettings:OpenIdConnectUrl"] +
+                                                      "protocol/openid-connect/token",
+                                            ClientId = Configuration["AuthSettings:ClientId"],
+                                            ClientSecret = Configuration["AuthSettings:ClientSecret"],
+                                            RefreshToken = refreshToken
+                                        });
+
+                                    if (!response.IsError)
+                                    {
+                                        identity.RemoveClaim(accessTokenClaim);
+                                        identity.RemoveClaim(refreshTokenClaim);
+
+                                        identity.AddClaims(new[]
+                                        {
+                                            new Claim("access_token", response.AccessToken),
+                                            new Claim("refresh_token", response.RefreshToken)
+                                        });
+
+                                        x.ShouldRenew = true;
+                                    }
+                                }
+                            }
+                        }
+                    };
+                })
                 .AddOpenIdConnect(options =>
                     {
                         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -43,6 +94,22 @@ namespace ReportGenerator
                         options.GetClaimsFromUserInfoEndpoint = true;
                         options.Scope.Clear();
                         options.Scope.Add("openid");
+                        options.Events = new OpenIdConnectEvents
+                        {
+                            OnTokenValidated = x =>
+                            {
+                                var identity = (ClaimsIdentity) x.Principal.Identity;
+                                identity.AddClaims(new[]
+                                {
+                                    new Claim("access_token", x.TokenEndpointResponse.AccessToken),
+                                    new Claim("refresh_token", x.TokenEndpointResponse.RefreshToken)
+                                });
+                                x.Properties.IsPersistent = true;
+                                var accessToken = new JwtSecurityToken(x.TokenEndpointResponse.AccessToken);
+                                x.Properties.ExpiresUtc = accessToken.ValidTo;
+                                return Task.CompletedTask;
+                            }
+                        };
                     }
                 );
 

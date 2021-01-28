@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿using System.Collections.Generic;
 
 namespace ReportGenerator.Models
 {
@@ -8,14 +6,12 @@ namespace ReportGenerator.Models
     {
         public Instance()
         {
-            ReportTemplateSchemes = new HashSet<ReportTemplateScheme>();
-            ReportTemplates = new HashSet<ReportTemplate>();
+            ReportTemplateSchemas = new HashSet<ReportTemplateSchema>();
         }
 
         public int Id { get; set; }
         public string Name { get; set; } = null!;
 
-        public virtual ICollection<ReportTemplateScheme> ReportTemplateSchemes { get; set; }
-        public virtual ICollection<ReportTemplate> ReportTemplates { get; set; }
+        public virtual ICollection<ReportTemplateSchema> ReportTemplateSchemas { get; set; }
     }
 }
