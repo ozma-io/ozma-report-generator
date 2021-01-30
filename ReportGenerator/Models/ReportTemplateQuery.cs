@@ -6,6 +6,7 @@
         public int TemplateId { get; set; }
         public string QueryText { get; set; } = null!;
         public string Name { get; set; } = null!;
+        public short QueryType { get; set; }
 
         public virtual ReportTemplate Template { get; set; } = null!;
     }

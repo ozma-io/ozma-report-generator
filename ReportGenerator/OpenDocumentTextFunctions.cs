@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -61,16 +62,32 @@ namespace ReportGenerator
             }
             var contentAsString = GetOdtXmlAsText(odtWithQueries);
             var queriesFromOdt = new List<FunDbQuery>();
-            const string patternForQueries = @"<query ([A-Za-z0-9]+)>(.*?)<\/query>";
+            const string patternForQueries = @"<query name=([A-Za-z0-9]+) type=([A-Za-z]+)>(.*?)<\/query>";
             var regexForQueries = new Regex(patternForQueries, RegexOptions.Singleline | RegexOptions.Compiled);
             var matchesForQueries = regexForQueries.Matches(contentAsString);
             foreach (Match? matchForQueries in matchesForQueries)
             {
-                if ((matchForQueries != null) && (matchForQueries.Success) && (matchForQueries.Groups.Count == 3))
+                if ((matchForQueries != null) && (matchForQueries.Success) && (matchForQueries.Groups.Count == 4))
                 {
                     var queryName = matchForQueries.Groups[1].ToString();
-                    var queryText = matchForQueries.Groups[2].ToString();
-                    var query = new FunDbQuery(queryName, queryText);
+                    var queryTypeText = matchForQueries.Groups[2].ToString();
+                    QueryType queryType;
+                    switch (queryTypeText)
+                    {
+                        case "SingleValue":
+                            queryType = QueryType.SingleValue;
+                            break;
+                        case "SingleRow":
+                            queryType = QueryType.SingleRow;
+                            break;
+                        case "ManyRows":
+                            queryType = QueryType.ManyRows;
+                            break;
+                        default:
+                            throw new Exception("Wrong query type in template: " + queryTypeText);
+                    }
+                    var queryText = matchForQueries.Groups[3].ToString();
+                    var query = new FunDbQuery(queryName, queryText, queryType);
                     queriesFromOdt.Add(query);
                 }
             }
@@ -80,11 +97,90 @@ namespace ReportGenerator
         public static OdfDocument RemoveQueriesFromOdt(OdfDocument odtWithQueries)
         {
             var contentXml = odtWithQueries.ReadMainContentXml();
-            const string patternForQueries = @"(&lt;query [A-Za-z0-9]+&gt;.*?&lt;/query&gt;)";
+            const string patternForQueries = @"(&lt;query (.*?)+&gt;.*?&lt;/query&gt;)";
             var newXml = Regex.Replace(contentXml.InnerXml, patternForQueries, "", RegexOptions.Singleline | RegexOptions.Compiled);
             contentXml.InnerXml = newXml;
             odtWithQueries.WriteMainContentXml(contentXml);
             return odtWithQueries;
+        }
+
+        public static List<TemplateExpression> GetTemplateExpressionsFromOdt(OdfDocument odt)
+        {
+            var result = new List<TemplateExpression>();
+            var contentAsString = GetOdtXmlAsText(odt);
+            const string patternForStatements = @"{{(.*?)}}";
+            var regex = new Regex(patternForStatements, RegexOptions.Multiline | RegexOptions.Compiled);
+            var matches = regex.Matches(contentAsString);
+
+            const string patternForManyRows = @"{\% for ([a-zA-Z0-9]+) in ([a-zA-Z0-9]+) \%}";
+            var regexForManyRows = new Regex(patternForManyRows, RegexOptions.Multiline | RegexOptions.Compiled);
+            var matchesForManyRows = regexForManyRows.Matches(contentAsString);
+
+            foreach (Match? match in matchesForManyRows)
+            {
+                if ((match != null) && (match.Success) && (match.Groups.Count == 3))
+                {
+                    var subQueryName = match.Groups[1].ToString();
+                    var queryName = match.Groups[2].ToString();
+                    if (!result.Any(p => p.QueryName == queryName))
+                    {
+                        var templateExpression = new TemplateExpression();
+                        templateExpression.QueryType = QueryType.ManyRows;
+                        templateExpression.QueryName = queryName;
+                        templateExpression.SubQueryName = subQueryName;
+                        result.Add(templateExpression);
+                    }
+                }
+            }
+
+            foreach (Match? match in matches)
+            {
+                if ((match != null) && (match.Success) && (match.Groups.Count == 2))
+                {
+                    var templateExpression = new TemplateExpression();
+                    
+                    var expression = match.Groups[1].ToString();
+                    if (expression.Contains("."))
+                    {
+                        var parts = expression.Split('.');
+                        var queryName = parts[0];
+                        var fieldName = parts[1];
+                        var manyRowsquery = result.FirstOrDefault(p =>
+                            (p.QueryType == QueryType.ManyRows) && (p.SubQueryName == queryName));
+                        if (manyRowsquery != null)
+                        {
+                            if (!manyRowsquery.FieldNames.Any(p => p == fieldName))
+                                manyRowsquery.FieldNames.Add(fieldName);
+                        }
+                        else
+                        {
+                            var singleRowQuery = result.FirstOrDefault(p => p.QueryName == queryName);
+                            if (singleRowQuery == null)
+                            {
+                                templateExpression.QueryType = QueryType.SingleRow;
+                                templateExpression.QueryName = queryName;
+                                templateExpression.FieldNames.Add(fieldName);
+                                result.Add(templateExpression);
+                            }
+                            else
+                            {
+                                if (!singleRowQuery.FieldNames.Any(p => p == fieldName))
+                                    singleRowQuery.FieldNames.Add(fieldName);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!result.Any(p => p.QueryName == expression))
+                        {
+                            templateExpression.QueryType = QueryType.SingleValue;
+                            templateExpression.QueryName = expression;
+                            result.Add(templateExpression);
+                        }
+                    }
+                }
+            }
+            return result;
         }
     }
 }

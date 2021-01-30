@@ -19,6 +19,10 @@
     <div class="form-group">
         <table id="tableMainListTemplates" class="table">
         </table>
+        <form id="formUpdateFile" style="display: none;" enctype="multipart/form-data">
+            <input id="templateToUploadFileToId" type="hidden" value="" />
+            <input id="UploadedOdtFile" name="UploadedOdtFile" type="file" accept=".odt">
+        </form>
     </div>
 </div>
 @await Html.PartialAsync("~/Views/Admin/PartialViews/AddSchemaPartial.cshtml")
@@ -27,6 +31,40 @@
 {
     <script type="text/javascript">
         var instanceName = '@ViewBag.instanceName';
+
+        function SelectOdt(templateId) {
+            $("#templateToUploadFileToId").val(templateId);
+            $("#UploadedOdtFile").click();
+        }
+
+        function UploadOdt(templateId) {
+            var formId = "formUpdateFile";
+            var updateUrl = "/Admin/" + instanceName + "/UpdateTemplateFile?templateId=" + templateId;
+            var form = $("#" + formId);
+            form.validate();
+            if (form.valid()) {
+                var formData = new FormData(document.getElementById(formId));
+                $.ajax({
+                    url: updateUrl,
+                    method: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: formData
+                }).done(function() {
+                    form.find("input[type=hidden], input[type=file]").val("");
+                    ShowMessage('Файл загружен');
+                }).fail(function(msg) {
+                    ShowErrorMessage('Ошибка: ' + msg.responseText);
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            $("#UploadedOdtFile").on("change", function (e) {
+                var templateId = $("#templateToUploadFileToId").val();
+                UploadOdt(templateId);
+            });
+        });
     </script>
     <script type="text/javascript" src="~/js/crud.js"></script>
 }

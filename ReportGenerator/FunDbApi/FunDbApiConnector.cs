@@ -73,50 +73,14 @@ namespace ReportGenerator.FunDbApi
             return request;
         }
 
-        private async Task<dynamic?> ExecuteRequest(string url, RestRequest request, int retryCount = 0)
+        private async Task<string?> ExecuteRequest(string url, RestRequest request, int retryCount = 0)
         {
-            dynamic? result = null;
             var client = new RestClient(url);
             var response = await client.ExecuteAsync(request);
             switch (response.StatusCode)
             {
                 case System.Net.HttpStatusCode.OK:
-                    var responseJson = response.Content;
-                    var viewExprResult = JsonConvert.DeserializeObject<ViewExprResult>(responseJson);
-                    if (viewExprResult?.info != null && viewExprResult.result != null)
-                    {
-                        var columnsNames = viewExprResult.info.columns.Select(p => p.name).ToList();
-
-                        if (columnsNames.Count() == 1 && viewExprResult.result.rows.Length == 1)
-                        {
-                            dynamic? value;
-                            if (viewExprResult.result.rows[0].values[0].pun != null)
-                                value = viewExprResult.result.rows[0].values[0].pun;
-                            else value = viewExprResult.result.rows[0].values[0].value;
-                            result = value;
-                        }
-                        else
-                        {
-                            result = new List<ExpandoObject>();
-                            foreach (var row in viewExprResult.result.rows)
-                            {
-                                var newItem = new ExpandoObject();
-                                for (var i = 0; i < columnsNames.Count(); i++)
-                                {
-                                    dynamic? value;
-                                    if (row.values[i].pun != null) value = row.values[i].pun;
-                                    else value = row.values[i].value;
-                                    ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
-                                }
-                                ((List<ExpandoObject>)result).Add(newItem);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception("FunDb query execution error " + responseJson);
-                    }
-                    return result;
+                    return response.Content;
                 case System.Net.HttpStatusCode.Unauthorized:
                     if (retryCount == 0)
                     {
@@ -126,13 +90,13 @@ namespace ReportGenerator.FunDbApi
                     }
                     else throw new Exception("FunDb query execution error: Unauthorized. " + response.Content);
                 default:
-                    throw new Exception("FunDb query execution error. Response status code: " + response.StatusCode);
+                    throw new Exception("FunDb query execution error. Response: " + response.Content);
             }
         }
 
-        private async Task<dynamic?> LoadQueryAnonymous(string queryText, Dictionary<string, object> parameterValues)
+        public async Task<string?> LoadQueryAnonymous(string queryText, Dictionary<string, object> parameterValues)
         {
-            dynamic? result = null;
+            string? result = null;
             if (!string.IsNullOrEmpty(tokenProcessor.AccessToken))
             {
                 var request = PrepareRequest(parameterValues);
@@ -142,27 +106,15 @@ namespace ReportGenerator.FunDbApi
             return result;
         }
 
-        private async Task<dynamic?> LoadQueryNamed(string queryText, Dictionary<string, object> parameterValues)
+        public async Task<string?> LoadQueryNamed(string queryText, Dictionary<string, object> parameterValues)
         {
-            dynamic? result = null;
+            string? result = null;
             if (!string.IsNullOrEmpty(tokenProcessor.AccessToken))
             {
                 var request = PrepareRequest(parameterValues);
-                if (!queryText.EndsWith("/entries")) queryText = queryText + "/entries";
                 result = await ExecuteRequest(GetApiUrl() + queryText, request);
             }
             return result;
-        }
-
-        public async Task LoadQuery(FunDbQuery query, Dictionary<string, object> queryParametersWithValues)
-        {
-            var queryTextToRun = query.QueryTextWithoutParameterValues;
-            dynamic? result = null;
-            if (queryTextToRun.StartsWith("/views/"))
-                result = await LoadQueryNamed(queryTextToRun, queryParametersWithValues);
-            else
-                result = await LoadQueryAnonymous(queryTextToRun, queryParametersWithValues);
-            query.SetResult(result);
         }
     }
 }

@@ -64,6 +64,7 @@ namespace ReportGenerator.Controllers
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);
             if (!hasAdminRights) return Unauthorized("User has no admin rights for this instance");
 
+            new ReportTemplateRepository(configuration, instanceName, true);
             ViewBag.SchemaId = await LoadSchemaNamesList(instanceName);
             ViewBag.instanceName = instanceName;
             return View();
@@ -177,7 +178,8 @@ namespace ReportGenerator.Controllers
                 var newQuery = new ReportTemplateQuery
                 {
                     Name = query.Name,
-                    QueryText = query.QueryTextWithoutParameterValues
+                    QueryText = query.QueryTextWithoutParameterValues,
+                    QueryType = (short) query.QueryType
                 };
                 model.ReportTemplateQueries.Add(newQuery);
             }
@@ -193,6 +195,58 @@ namespace ReportGenerator.Controllers
                 {
                     model.Name = RemoveRestrictedSymbols(model.Name);
                     await repository.AddTemplate(model);
+                    return Ok();
+                }
+                catch (Exception e)
+                {
+                    string msg;
+                    if (e.InnerException != null) msg = e.InnerException.Message;
+                    else msg = e.Message;
+                    return StatusCode(500, msg);
+                }
+            }
+        }
+
+        [HttpPost]
+        [Route("admin/{instanceName}/UpdateTemplateFile")]
+        public async Task<IActionResult> UpdateTemplateFile(string instanceName, int templateId, IFormFile UploadedOdtFile)
+        {
+            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
+            if (!hasAdminRights) return Unauthorized();
+
+            OdfDocument? odtWithQueries = null;
+            await using (var stream = new MemoryStream())
+            {
+                await UploadedOdtFile.CopyToAsync(stream);
+                odtWithQueries = await OdfDocument.LoadFromAsync(stream);
+            }
+            if (odtWithQueries == null) throw new Exception("Error processing odt file");
+
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
+            {
+                var model = await repository.LoadTemplate(templateId);
+                if (model == null) throw new Exception("Template with id=" + templateId + " not found");
+                model.ReportTemplateQueries.Clear();
+                var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
+                foreach (var query in queries)
+                {
+                    var newQuery = new ReportTemplateQuery
+                    {
+                        Name = query.Name,
+                        QueryText = query.QueryTextWithoutParameterValues,
+                        QueryType = (short)query.QueryType
+                    };
+                    model.ReportTemplateQueries.Add(newQuery);
+                }
+                var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
+                await using (var stream = new MemoryStream())
+                {
+                    await odtWithoutQueries.SaveAsync(stream);
+                    model.OdtWithoutQueries = stream.ToArray();
+                }
+                try
+                {
+                    await repository.UpdateTemplate(model);
                     return Ok();
                 }
                 catch (Exception e)

@@ -3,7 +3,7 @@
     <tr>
         <th>Название</th>
         <th>Схема</th>
-        <th>Параметры</th>
+        <th></th>
         <th></th>
     </tr>
 </thead>
@@ -13,6 +13,7 @@
     <tr>
         <td>@item.Name</td>
         <td>@item.SchemaName</td>
+        <td><button type="button" class="btn btn-success" onclick="SelectOdt(@item.Id) ">Обновить файл шаблона</button></td>
         <td><button type="button" class="btn btn-danger" onclick="Delete('Template', @item.Id) ">Удалить</button></td>
     </tr>
 }

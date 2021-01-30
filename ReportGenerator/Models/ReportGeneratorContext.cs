@@ -17,6 +17,7 @@ namespace ReportGenerator.Models
         //{
         //}
 
+
         public virtual DbSet<Instance> Instances { get; set; } = null!;
         public virtual DbSet<ReportTemplate> ReportTemplates { get; set; } = null!;
         public virtual DbSet<ReportTemplateQuery> ReportTemplateQueries { get; set; } = null!;
@@ -33,6 +34,8 @@ namespace ReportGenerator.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.HasAnnotation("Relational:Collation", "Russian_Russia.1251");
+
             modelBuilder.Entity<Instance>(entity =>
             {
                 entity.HasIndex(e => e.Name, "instances_name_uindex")
@@ -45,6 +48,9 @@ namespace ReportGenerator.Models
 
             modelBuilder.Entity<ReportTemplate>(entity =>
             {
+                entity.HasIndex(e => new { e.Name, e.SchemaId }, "reporttemplates_name_schemaid_uindex")
+                    .IsUnique();
+
                 entity.HasIndex(e => e.SchemaId, "reporttemplates_schemaid_index");
 
                 entity.Property(e => e.Name)
@@ -81,8 +87,6 @@ namespace ReportGenerator.Models
 
                 entity.HasIndex(e => new { e.Name, e.InstanceId }, "reporttemplateschemas_name_instanceid_uindex")
                     .IsUnique();
-
-                entity.Property(e => e.Id).HasDefaultValueSql("nextval('\"ReportTemplateSchemas_Id_seq\"'::regclass)");
 
                 entity.Property(e => e.Name)
                     .IsRequired()

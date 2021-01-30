@@ -62,7 +62,8 @@ CREATE TABLE public."ReportTemplateQueries" (
     "Id" integer NOT NULL,
     "TemplateId" integer NOT NULL,
     "QueryText" character varying NOT NULL,
-    "Name" character varying(50) NOT NULL
+    "Name" character varying(50) NOT NULL,
+    "QueryType" smallint NOT NULL
 );
 
 
@@ -217,7 +218,7 @@ COPY public."Instances" ("Id", "Name") FROM stdin;
 -- Data for Name: ReportTemplateQueries; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."ReportTemplateQueries" ("Id", "TemplateId", "QueryText", "Name") FROM stdin;
+COPY public."ReportTemplateQueries" ("Id", "TemplateId", "QueryText", "Name", "QueryType") FROM stdin;
 \.
 
 
@@ -241,7 +242,7 @@ COPY public."ReportTemplates" ("Id", "SchemaId", "Name", "OdtWithoutQueries") FR
 -- Name: Instances_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Instances_Id_seq"', 6, true);
+SELECT pg_catalog.setval('public."Instances_Id_seq"', 9, true);
 
 
 --
@@ -255,14 +256,14 @@ SELECT pg_catalog.setval('public."ReportTemplateQueries_Id_seq"', 1, false);
 -- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."ReportTemplateSchemas_Id_seq"', 95, true);
+SELECT pg_catalog.setval('public."ReportTemplateSchemas_Id_seq"', 99, true);
 
 
 --
 -- Name: ReportTemplates_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."ReportTemplates_Id_seq"', 1, true);
+SELECT pg_catalog.setval('public."ReportTemplates_Id_seq"', 24, true);
 
 
 --

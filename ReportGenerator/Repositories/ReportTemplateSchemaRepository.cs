@@ -9,8 +9,8 @@ namespace ReportGenerator.Repositories
 {
     public class ReportTemplateSchemaRepository : Repository
     {
-        public ReportTemplateSchemaRepository(IConfiguration configuration, string instanceName) : base(configuration,
-            instanceName)
+        public ReportTemplateSchemaRepository(IConfiguration configuration, string instanceName, bool createInstanceIfNotExists = false) : base(configuration,
+            instanceName, createInstanceIfNotExists)
         {
 
         }

@@ -9,8 +9,8 @@ namespace ReportGenerator.Repositories
 {
     public class ReportTemplateRepository : Repository
     {
-        public ReportTemplateRepository(IConfiguration configuration, string instanceName) : base(configuration,
-            instanceName)
+        public ReportTemplateRepository(IConfiguration configuration, string instanceName, bool createInstanceIfNotExists = false) : base(configuration,
+            instanceName, createInstanceIfNotExists)
         {
 
         }
@@ -20,7 +20,13 @@ namespace ReportGenerator.Repositories
             await dbContext.ReportTemplates.AddAsync(template);
             await dbContext.SaveChangesAsync();
         }
-        
+
+        public async Task UpdateTemplate(ReportTemplate template)
+        {
+            dbContext.Entry(template).State = EntityState.Modified;
+            await dbContext.SaveChangesAsync();
+        }
+
         public async Task<List<VReportTemplate>> LoadAllTemplates()
         {
             return await dbContext.VReportTemplates.Where(p => p.InstanceId == instance.Id).AsNoTracking()
@@ -43,6 +49,13 @@ namespace ReportGenerator.Repositories
             return await dbContext.ReportTemplates.AsNoTracking().Include(p => p.ReportTemplateQueries)
                 .FirstOrDefaultAsync(p =>
                     (p.Schema.InstanceId == instance.Id) && (p.Schema.Name == schemaName) && (p.Name == templateName));
+        }
+
+        public async Task<ReportTemplate?> LoadTemplate(int templateId)
+        {
+            return await dbContext.ReportTemplates.Include(p => p.ReportTemplateQueries)
+                .FirstOrDefaultAsync(p =>
+                    (p.Schema.InstanceId == instance.Id) && (p.Id == templateId));
         }
     }
 }

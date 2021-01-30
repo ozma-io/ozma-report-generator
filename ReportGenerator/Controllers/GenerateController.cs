@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using ReportGenerator.Models;
@@ -20,19 +22,19 @@ namespace ReportGenerator.Controllers
 
         [HttpGet]
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/odt")]
-        public async Task<FileResult?> GetOdt(string instanceName, string schemaName, string templateName)
+        public async Task<IActionResult?> GetOdt(string instanceName, string schemaName, string templateName)
         {
             return await GenerateTemplate(instanceName, schemaName, templateName, "odt");
         }
 
         [HttpGet]
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/pdf")]
-        public async Task<FileResult?> GetPdf(string instanceName, string schemaName, string templateName)
+        public async Task<IActionResult?> GetPdf(string instanceName, string schemaName, string templateName)
         {
             return await GenerateTemplate(instanceName, schemaName, templateName, "pdf");
         }
 
-        private async Task<FileResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string? format)
+        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string? format)
         {
             if (string.IsNullOrEmpty(instanceName))
             {
@@ -59,9 +61,10 @@ namespace ReportGenerator.Controllers
             {
                 template = await repository.LoadTemplate(schemaName, templateName);
             }
+
             if (template == null)
             {
-                throw new Exception("Template '" + templateName + "' not found");
+                return NotFound("Template '" + templateName + "' not found");
             }
 
             var tokenProcessor = await CreateTokenProcessor();

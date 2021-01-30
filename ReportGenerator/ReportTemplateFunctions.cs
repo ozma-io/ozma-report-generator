@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
-using Sandwych.Reporting;
 using Sandwych.Reporting.OpenDocument;
+using TemplateContext = Sandwych.Reporting.TemplateContext;
 
 namespace ReportGenerator
 {
@@ -40,7 +42,7 @@ namespace ReportGenerator
             {
                 foreach (var query in template.ReportTemplateQueries)
                 {
-                    var funDbQuery = new FunDbQuery(query.Name, query.QueryText);
+                    var funDbQuery = new FunDbQuery(query.Name, query.QueryText, (QueryType)query.QueryType);
                     result.Add(funDbQuery);
                 }
             }
@@ -71,12 +73,14 @@ namespace ReportGenerator
 
             OdfDocument? result = null;
             var odtWithoutQueries = await PrepareOdtWithoutQueries(template);
+            if (odtWithoutQueries == null) throw new Exception("Template odt is null");
+
             var queriesFromOdt = GetQueriesAsFunDb(template);
             if (!queriesFromOdt.Any()) return odtWithoutQueries;
 
             foreach (var funDbQuery in queriesFromOdt)
             {
-                await funDbApiConnector.LoadQuery(funDbQuery, parametersWithValues);
+                await funDbQuery.LoadDataAsync(funDbApiConnector, parametersWithValues);
             }
 
             var loadedQueries = queriesFromOdt.Where(p => p.IsLoaded).ToList();
@@ -92,18 +96,60 @@ namespace ReportGenerator
                     //}
                 }
 
+                var templateExpressions = OpenDocumentTextFunctions.GetTemplateExpressionsFromOdt(odtWithoutQueries);
+                if (!templateExpressions.Any())
+                    throw new Exception("No {{ }} expressions found in template");
+
                 foreach (var loadedQuery in loadedQueries)
                 {
                     if (loadedQuery.Result != null)
                         data.Add(loadedQuery.Name, loadedQuery.Result);
                 }
 
-                if (odtWithoutQueries != null)
+                foreach (var templateExpression in templateExpressions)
                 {
-                    var context = new TemplateContext(data);
-                    var odtTemplate = new OdtTemplate(odtWithoutQueries);
-                    result = await odtTemplate.RenderAsync(context);
+                    var loadedQuery = loadedQueries.FirstOrDefault(p => p.Name == templateExpression.QueryName);
+                    if (loadedQuery == null)
+                        throw new Exception("Query " + templateExpression.QueryName +
+                                            " from template not found in FunDb queries");
+                    if (loadedQuery.QueryType != templateExpression.QueryType)
+                        throw new Exception("Query " + templateExpression.QueryName +
+                                            " return type is different from FunDb query type");
+
+                    switch (templateExpression.QueryType)
+                    {
+                        case QueryType.SingleRow:
+                            if (!(loadedQuery.Result is ExpandoObject))
+                                throw new Exception("Query " + templateExpression.QueryName +
+                                                    " from template return result is not ExpandoObject");
+                            foreach (var fieldName in templateExpression.FieldNames)
+                            {
+                                if (!((ExpandoObject) loadedQuery.Result).Any(p => p.Key == fieldName))
+                                    throw new Exception("Query " + templateExpression.QueryName +
+                                                        " error: field " + fieldName +
+                                                        " not found in FunDb query results");
+                            }
+                            break;
+                        case QueryType.ManyRows:
+                            if (!(loadedQuery.Result is List<ExpandoObject>))
+                                throw new Exception("Query " + templateExpression.QueryName +
+                                                    " from template return result is not List<ExpandoObject>");
+                            foreach (var fieldName in templateExpression.FieldNames)
+                            {
+                                foreach (var item in (List<ExpandoObject>) loadedQuery.Result)
+                                {
+                                    if (!item.Any(p => p.Key == fieldName))
+                                        throw new Exception("Query " + templateExpression.QueryName +
+                                                            " error: field " + fieldName +
+                                                            " not found in FunDb query results");
+                                }
+                            }
+                            break;
+                    }
                 }
+                var context = new TemplateContext(data);
+                var odtTemplate = new OdtTemplate(odtWithoutQueries);
+                result = await odtTemplate.RenderAsync(context);
             }
             else
             {
