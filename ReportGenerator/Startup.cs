@@ -113,7 +113,7 @@ namespace ReportGenerator
                         };
                     }
                 );
-
+            services.AddCors();
             services.AddControllersWithViews();
         }
 
@@ -135,7 +135,11 @@ namespace ReportGenerator
 
             app.UseRouting();
 
-	    app.UseForwardedHeaders(new ForwardedHeadersOptions
+            app.UseCors(
+                options => options.WithOrigins(Configuration["AuthSettings:OpenIdConnectUrl"]).AllowAnyMethod()
+            );
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
