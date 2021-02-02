@@ -67,7 +67,7 @@ namespace ReportGenerator.Controllers
                 return NotFound("Template '" + templateName + "' not found");
             }
 
-            var tokenProcessor = await CreateTokenProcessor();
+            var tokenProcessor = CreateTokenProcessor();
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
             var generatedReport = await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
             if (generatedReport != null)

@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using DDDN.OdtToHtml;
-using OpenHtmlToPdf;
-using SelectPdf;
+using WkHtmlToPdfDotNet;
 
 namespace ReportGenerator
 {
@@ -39,18 +38,28 @@ namespace ReportGenerator
 
         public static byte[] HtmlToPdf(string html)
         {
-            //var pdf = Pdf.From(html).Content();
-            //return pdf;
-            HtmlToPdf converter = new HtmlToPdf();
-            PdfDocument doc = converter.ConvertHtmlString(html);
-            byte[]? bytes = null;
-            using (var stream = new MemoryStream())
+            var converter = new SynchronizedConverter(new PdfTools());
+            var doc = new HtmlToPdfDocument()
             {
-                doc.Save(stream);
-                bytes = stream.ToArray();
-            }
-            doc.Close();
-            return bytes;
+                GlobalSettings =
+                {
+                    ColorMode = ColorMode.Color,
+                    Orientation = Orientation.Portrait,
+                    PaperSize = PaperKind.A4Plus,
+                },
+                Objects =
+                {
+                    new ObjectSettings()
+                    {
+                        PagesCount = true,
+                        HtmlContent = html,
+                        WebSettings = {DefaultEncoding = "utf-8"},
+                        //HeaderSettings = { FontSize = 9, Right = "Page [page] of [toPage]", Line = true, Spacing = 2.812 }
+                    }
+                }
+            };
+            byte[] pdf = converter.Convert(doc);
+            return pdf;
         }
     }
 }

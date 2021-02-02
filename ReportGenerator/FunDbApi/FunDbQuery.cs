@@ -39,7 +39,7 @@ namespace ReportGenerator.FunDbApi
             dynamic? result = null;
             if (queryTextToRun.StartsWith("/views/"))
             {
-                const string pattern = @"/views/(?<schema>[^/]+)/(?<name>[^/]+)";
+                const string pattern = @"/views/(?<schema>[^/]+)/(?<name>[^/]+)$";
                 var regex = new Regex(pattern, RegexOptions.Singleline | RegexOptions.Compiled);
                 var matchesForQueries = regex.Matches(queryTextToRun);
                 if (matchesForQueries.Count() != 1) throw new Exception("Syntax error in query " + Name);

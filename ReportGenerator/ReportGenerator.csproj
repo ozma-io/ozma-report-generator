@@ -9,8 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="DDDN.OdtToHtml" Version="0.25.1.211" />
+    <PackageReference Include="Haukcode.WkHtmlToPdfDotNet" Version="1.3.0" />
     <PackageReference Include="IdentityModel" Version="5.0.0" />
-    <PackageReference Include="InfiniSwiss.OpenHtmlToPdf" Version="1.0.2" />
     <PackageReference Include="MaltReport2" Version="3.0.2-beta" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.1.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
@@ -21,7 +21,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.2" />
     <PackageReference Include="RestSharp" Version="106.11.7" />
-    <PackageReference Include="Select.HtmlToPdf.NetCore" Version="20.2.0" />
   </ItemGroup>
 
   <ItemGroup>

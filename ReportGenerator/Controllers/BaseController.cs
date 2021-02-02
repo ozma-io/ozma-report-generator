@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -14,9 +16,13 @@ namespace ReportGenerator.Controllers
             this.configuration = configuration;
         }
 
-        protected async Task<TokenProcessor> CreateTokenProcessor()
+        protected TokenProcessor CreateTokenProcessor()
         {
-            return await TokenProcessor.Create(configuration, HttpContext);
+            if (!HttpContext.User.Identity.IsAuthenticated)
+            {
+                throw new Exception("User is not authenticated");
+            }
+            return TokenProcessor.Create(configuration, HttpContext);
         }
     }
 }

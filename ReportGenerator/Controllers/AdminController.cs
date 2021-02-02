@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -30,7 +32,7 @@ namespace ReportGenerator.Controllers
 
         private async Task<bool> HasAdminRightsForInstance(string instanceName)
         {
-            var tokenProcessor = await CreateTokenProcessor();
+            var tokenProcessor = CreateTokenProcessor();
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
             var adminRights = await funDbApiConnector.GetUserIsAdmin();
             return adminRights;
@@ -116,8 +118,16 @@ namespace ReportGenerator.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpDelete]
         [Route("admin/{instanceName}/DeleteSchema")]
+        public async Task<IActionResult> DeleteSchemaAnonymous(string instanceName, int id)
+        {
+            return await DeleteSchema(instanceName, id);
+        }
+
+        [HttpDelete]
+        //[Route("admin/{instanceName}/DeleteSchema")]
         public async Task<IActionResult> DeleteSchema(string instanceName, int id)
         {
             var hasAdminRights = await HasAdminRightsForInstance(instanceName);

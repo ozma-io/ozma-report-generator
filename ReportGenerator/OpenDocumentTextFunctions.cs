@@ -62,7 +62,7 @@ namespace ReportGenerator
             }
             var contentAsString = GetOdtXmlAsText(odtWithQueries);
             var queriesFromOdt = new List<FunDbQuery>();
-            const string patternForQueries = @"<query name=([A-Za-z0-9]+) type=([A-Za-z]+)>(.*?)<\/query>";
+            const string patternForQueries = "<query name=\"([A-Za-z0-9]+)\" type=\"([A-Za-z]+)\">(.*?)<\\/query>";
             var regexForQueries = new Regex(patternForQueries, RegexOptions.Singleline | RegexOptions.Compiled);
             var matchesForQueries = regexForQueries.Matches(contentAsString);
             foreach (Match? matchForQueries in matchesForQueries)
