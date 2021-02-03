@@ -47,7 +47,11 @@ namespace ReportGenerator.FunDbApi
                         await tokenProcessor.RefreshToken();
                         return await GetUserIsAdmin(retryCount);
                     }
-                    else throw new Exception("Getting /permissions error: Unauthorized. " + response.Content);
+                    else
+                    {
+                        await tokenProcessor.SignOut();
+                        throw new Exception("Getting /permissions error: Unauthorized. " + response.Content);
+                    }
                 default:
                     throw new Exception("Getting /permissions error. Response status code: " + response.StatusCode);
             }
@@ -86,7 +90,11 @@ namespace ReportGenerator.FunDbApi
                         await tokenProcessor.RefreshToken();
                         return await ExecuteRequest(url, request, retryCount);
                     }
-                    else throw new Exception("FunDb query execution error: Unauthorized. " + response.Content);
+                    else
+                    {
+                        await tokenProcessor.SignOut();
+                        throw new Exception("FunDb query execution error: Unauthorized. " + response.Content);
+                    }
                 default:
                     throw new Exception("FunDb query execution error. Response: " + response.Content);
             }

@@ -61,6 +61,12 @@ namespace ReportGenerator
                 });
                 await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
             }
+            else await SignOut();
+        }
+
+        public async Task SignOut()
+        {
+            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         }
     }
 }
