@@ -143,10 +143,13 @@ namespace ReportGenerator
 
             app.UseRouting();
 
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            var forwardingOptions = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
+            };
+            forwardingOptions.KnownNetworks.Clear();
+            forwardingOptions.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardingOptions);
 
             app.UseAuthentication();
             app.UseAuthorization();
