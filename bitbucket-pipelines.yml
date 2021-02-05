@@ -2,7 +2,7 @@ options:
   max-time: 10
 pipelines:
   default:
-    - step:
+    - step: &build_step
         name: Build
         image: mcr.microsoft.com/dotnet/sdk:5.0
         caches:
@@ -14,7 +14,7 @@ pipelines:
           - publish/**
   branches:
     master:
-      - step: *build_steps
+      - step: *build_step
       - step:
           name: Deploy to test
           image: atlassian/default-image:2
