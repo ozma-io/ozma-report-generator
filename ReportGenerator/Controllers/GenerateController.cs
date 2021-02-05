@@ -3,7 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Net.Http.Headers;
 using ReportGenerator.Models;
@@ -68,8 +72,19 @@ namespace ReportGenerator.Controllers
                 return NotFound("Template '" + templateName + "' not found");
             }
 
-            var tokenProcessor = CreateTokenProcessor();
-            var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
+            var authFail = false;
+            var isAuthenticated = CreateTokenProcessor();
+            if ((!isAuthenticated) || (TokenProcessor == null)) authFail = true;
+
+            var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, TokenProcessor);
+            var checkAccess = await funDbApiConnector.CheckAccess();
+            if (checkAccess == HttpStatusCode.Unauthorized) authFail = true;
+            if (authFail)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
+            }
             var generatedReport =
                 await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
             if (generatedReport != null)
@@ -91,23 +106,35 @@ namespace ReportGenerator.Controllers
                 }
                 else if (format == "pdf")
                 {
-                    var fileName = instanceName + "_" + schemaName + "_" +  templateName;
-                    var odtFilePath = Path.GetTempPath() + fileName + ".odt";
-                    var pdfFilePath = Path.GetTempPath() + fileName + ".pdf";
-                    await generatedReport.SaveAsync(odtFilePath);
-                    if (!System.IO.File.Exists(odtFilePath))
-                        throw new Exception("File " + odtFilePath + " was not created");
-                    var response = FormatConverter.OdtToPdf(configuration, odtFilePath);
-                    if (!System.IO.File.Exists(pdfFilePath))
-                        throw new Exception("File " + pdfFilePath + " was not created. Error message: " + response);
-                    byte[] bytesPdf = await System.IO.File.ReadAllBytesAsync(pdfFilePath);
-                    result = new FileContentResult(bytesPdf,
-                        new MediaTypeHeaderValue("application/pdf"))
+                    var odtFilePath = Path.GetTempFileName(); //Path.GetTempPath() + fileName + ".odt";
+                    var pdfFilePath = odtFilePath.Replace(".tmp", ".pdf"); //Path.GetTempPath() + fileName + ".pdf";
+                    try
                     {
-                        FileDownloadName = templateName + ".pdf"
-                    };
-                    System.IO.File.Delete(odtFilePath);
-                    System.IO.File.Delete(pdfFilePath);
+                        await generatedReport.SaveAsync(odtFilePath);
+                        if (!System.IO.File.Exists(odtFilePath))
+                            throw new Exception("File " + odtFilePath + " was not created");
+                        try
+                        {
+                            var response = FormatConverter.OdtToPdf(configuration, odtFilePath);
+                            if (!System.IO.File.Exists(pdfFilePath))
+                                throw new Exception("File " + pdfFilePath + " was not created. Error message: " +
+                                                    response);
+                            byte[] bytesPdf = await System.IO.File.ReadAllBytesAsync(pdfFilePath);
+                            result = new FileContentResult(bytesPdf,
+                                new MediaTypeHeaderValue("application/pdf"))
+                            {
+                                FileDownloadName = templateName + ".pdf"
+                            };
+                        }
+                        finally
+                        {
+                            System.IO.File.Delete(pdfFilePath);
+                        }
+                    }
+                    finally
+                    {
+                        System.IO.File.Delete(odtFilePath);
+                    }
                 }
                 else 
                     throw new Exception("Unsupported file format: " + format);

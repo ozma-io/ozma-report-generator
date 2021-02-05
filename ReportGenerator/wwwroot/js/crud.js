@@ -6,6 +6,12 @@
         method: "GET",
     }).done(function (partialViewResult) {
         $("#" + tableId).html(partialViewResult);
+    }).fail(function (msg) {
+        if (msg.responseText == 'relog') {
+            document.location.reload();
+        } else {
+            ShowErrorMessage('Ошибка: ' + msg.responseText);
+        }
     });
 }
 function Add(objectName) {
@@ -28,7 +34,11 @@ function Add(objectName) {
             modalWindow.modal('hide');
             form.find("input[type=text], textarea").val("");
         }).fail(function (msg) {
-            ShowErrorMessage('Ошибка: ' + msg.responseText);
+            if (msg.responseText == 'relog') {
+                document.location.reload();
+            } else {
+                ShowErrorMessage('Ошибка: ' + msg.responseText);
+            }
         });
     }
 }
@@ -50,7 +60,11 @@ function AddWithFile(objectName) {
             modalWindow.modal('hide');
             form.find("input[type=text], input[type=file], textarea").val("");
         }).fail(function (msg) {
-            ShowErrorMessage('Ошибка: ' + msg.responseText);
+            if (msg.responseText == 'relog') {
+                document.location.reload();
+            } else {
+                ShowErrorMessage('Ошибка: ' + msg.responseText);
+            }
         });
     }
 }
@@ -68,7 +82,11 @@ function Delete(objectName, id) {
         }
         LoadList(objectName);
     }).fail(function (msg) {
-        ShowErrorMessage('Ошибка: ' + msg.responseText);
+        if (msg.responseText == 'relog') {
+            document.location.reload();
+        } else {
+            ShowErrorMessage('Ошибка: ' + msg.responseText);
+        }
     });
 }
 function LoadSchemaNamesList() {
@@ -84,6 +102,12 @@ function LoadSchemaNamesList() {
             options += '<option value="' + response[i].value + '">' + response[i].text + '</option>';
         }
         $('#SchemaId').append(options);  
+    }).fail(function (msg) {
+        if (msg == 'relog') {
+            document.location.reload();
+        } else {
+            ShowErrorMessage('Ошибка: ' + msg.responseText);
+        }
     });
 }
 $(document).ready(function () {

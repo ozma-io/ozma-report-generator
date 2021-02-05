@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -26,35 +27,51 @@ namespace ReportGenerator.FunDbApi
             return dbUrl.Replace("{instanceName}", instanceName);
         }
 
-        public async Task<bool> GetUserIsAdmin(int retryCount = 0)
+        public async Task<HttpStatusCode> CheckAccess()
         {
+            var values = new Dictionary<string, object>();
+            var request = PrepareRequest(values);
+            var client = new RestClient(GetApiUrl() + "/check_access");
+            var response = await client.ExecuteAsync(request);
+            return response.StatusCode;
+        }
+
+        public async Task<PermissionsResponse> GetPermissions(int retryCount = 0)
+        {
+            var result = new PermissionsResponse();
             var values = new Dictionary<string, object>();
             var request = PrepareRequest(values);
             var client = new RestClient(GetApiUrl() + "/permissions");
             var response = await client.ExecuteAsync(request);
+            result.ResponseCode = response.StatusCode;
             switch (response.StatusCode)
             {
                 case System.Net.HttpStatusCode.OK:
                     var responseJson = response.Content;
                     var permissions = JsonConvert.DeserializeObject<PermissionsResponseJson>(responseJson);
-                    return permissions.IsRoot;
+                    result.ResponseJson = permissions;
+                    result.IsAdmin = permissions.IsRoot;
+                    break;
                 case System.Net.HttpStatusCode.Forbidden:
-                    return false;
+                    result.IsAdmin = false;
+                    break;
                 case System.Net.HttpStatusCode.Unauthorized:
                     if (retryCount == 0)
                     {
                         retryCount++;
                         await tokenProcessor.RefreshToken();
-                        return await GetUserIsAdmin(retryCount);
+                        result = await GetPermissions(retryCount);
                     }
                     else
                     {
                         await tokenProcessor.SignOut();
-                        throw new Exception("Getting /permissions error: Unauthorized. " + response.Content);
                     }
+                    break;
                 default:
                     throw new Exception("Getting /permissions error. Response status code: " + response.StatusCode);
             }
+
+            return result;
         }
 
         private RestRequest PrepareRequest(Dictionary<string, object> parameterValues)

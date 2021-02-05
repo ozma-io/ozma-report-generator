@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -16,13 +18,17 @@ namespace ReportGenerator.Controllers
             this.configuration = configuration;
         }
 
-        protected TokenProcessor CreateTokenProcessor()
+        protected TokenProcessor? TokenProcessor { get; private set; }
+
+        protected bool CreateTokenProcessor()
         {
             if (!HttpContext.User.Identity.IsAuthenticated)
             {
-                throw new Exception("User is not authenticated");
+                //throw new Exception("User is not authenticated");
+                return false;
             }
-            return TokenProcessor.Create(configuration, HttpContext);
+            TokenProcessor = TokenProcessor.Create(configuration, HttpContext);
+            return true;
         }
     }
 }

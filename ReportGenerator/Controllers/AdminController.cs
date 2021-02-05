@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
+using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
 using ReportGenerator.Repositories;
 using Sandwych.Reporting.OpenDocument;
@@ -30,12 +31,16 @@ namespace ReportGenerator.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        private async Task<bool> HasAdminRightsForInstance(string instanceName)
+        private async Task<PermissionsResponse?> HasPermissionsForInstance(string instanceName)
         {
-            var tokenProcessor = CreateTokenProcessor();
-            var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, tokenProcessor);
-            var adminRights = await funDbApiConnector.GetUserIsAdmin();
-            return adminRights;
+            var isAuthenticated = CreateTokenProcessor();
+            if ((isAuthenticated) && (TokenProcessor != null))
+            {
+                var funDbApiConnector = new FunDbApiConnector(configuration, instanceName, TokenProcessor);
+                var permissions = await funDbApiConnector.GetPermissions();
+                return permissions;
+            }
+            return null;
         }
 
         private async Task<SelectList> LoadSchemaNamesList(string instanceName)
@@ -48,7 +53,7 @@ namespace ReportGenerator.Controllers
             var selectList = new SelectList(list, "Id", "Name");
             return selectList;
         }
-
+        
         [HttpGet]
         [Route("admin/{instanceName}/GetSchemaNamesList")]
         public async Task<JsonResult> GetSchemaNamesList(string instanceName)
@@ -63,8 +68,10 @@ namespace ReportGenerator.Controllers
             if (string.IsNullOrEmpty(instanceName))
                 throw new Exception("Instance name cannot be empty");
 
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized("User has no admin rights for this instance");
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return RedirectToAction("Index", new { instanceName } );
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             new ReportTemplateRepository(configuration, instanceName, true);
             ViewBag.SchemaId = await LoadSchemaNamesList(instanceName);
@@ -82,8 +89,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/LoadSchemas")]
         public async Task<IActionResult> LoadSchemas(string instanceName)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             var list = new List<ReportTemplateSchema>();
             using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
@@ -97,8 +106,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/AddSchema")]
         public async Task<IActionResult> AddSchema(string instanceName, ReportTemplateSchema model)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
@@ -130,8 +141,10 @@ namespace ReportGenerator.Controllers
         //[Route("admin/{instanceName}/DeleteSchema")]
         public async Task<IActionResult> DeleteSchema(string instanceName, int id)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
@@ -156,8 +169,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/LoadTemplates")]
         public async Task<IActionResult> LoadTemplates(string instanceName)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             var list = new List<VReportTemplate>();
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
@@ -171,8 +186,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/AddTemplate")]
         public async Task<IActionResult> AddTemplate(string instanceName, IFormFile UploadedOdtFile, ReportTemplate model)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             OdfDocument? odtWithQueries = null;
             await using (var stream = new MemoryStream())
@@ -221,8 +238,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/UpdateTemplateFile")]
         public async Task<IActionResult> UpdateTemplateFile(string instanceName, int templateId, IFormFile UploadedOdtFile)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             OdfDocument? odtWithQueries = null;
             await using (var stream = new MemoryStream())
@@ -273,8 +292,10 @@ namespace ReportGenerator.Controllers
         [Route("admin/{instanceName}/DeleteTemplate")]
         public async Task<IActionResult> DeleteTemplate(string instanceName, int id)
         {
-            var hasAdminRights = await HasAdminRightsForInstance(instanceName);
-            if (!hasAdminRights) return Unauthorized();
+            var permissions = await HasPermissionsForInstance(instanceName);
+            if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
+                return StatusCode(401, "relog");
+            if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
