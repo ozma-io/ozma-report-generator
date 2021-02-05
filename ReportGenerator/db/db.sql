@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.1
--- Dumped by pg_dump version 13.1
+-- Dumped from database version 13.0
+-- Dumped by pg_dump version 13.0
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -21,7 +21,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: Instances; Type: TABLE; Schema: public; Owner: postgres
+-- Name: Instances; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."Instances" (
@@ -30,10 +30,8 @@ CREATE TABLE public."Instances" (
 );
 
 
-ALTER TABLE public."Instances" OWNER TO postgres;
-
 --
--- Name: Instances_Id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: Instances_Id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public."Instances_Id_seq"
@@ -45,17 +43,15 @@ CREATE SEQUENCE public."Instances_Id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."Instances_Id_seq" OWNER TO postgres;
-
 --
--- Name: Instances_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: Instances_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public."Instances_Id_seq" OWNED BY public."Instances"."Id";
 
 
 --
--- Name: ReportTemplateQueries; Type: TABLE; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."ReportTemplateQueries" (
@@ -67,10 +63,8 @@ CREATE TABLE public."ReportTemplateQueries" (
 );
 
 
-ALTER TABLE public."ReportTemplateQueries" OWNER TO postgres;
-
 --
--- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public."ReportTemplateQueries_Id_seq"
@@ -82,17 +76,15 @@ CREATE SEQUENCE public."ReportTemplateQueries_Id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."ReportTemplateQueries_Id_seq" OWNER TO postgres;
-
 --
--- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public."ReportTemplateQueries_Id_seq" OWNED BY public."ReportTemplateQueries"."Id";
 
 
 --
--- Name: ReportTemplateSchemas; Type: TABLE; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."ReportTemplateSchemas" (
@@ -102,10 +94,8 @@ CREATE TABLE public."ReportTemplateSchemas" (
 );
 
 
-ALTER TABLE public."ReportTemplateSchemas" OWNER TO postgres;
-
 --
--- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public."ReportTemplateSchemas_Id_seq"
@@ -117,17 +107,15 @@ CREATE SEQUENCE public."ReportTemplateSchemas_Id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."ReportTemplateSchemas_Id_seq" OWNER TO postgres;
-
 --
--- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public."ReportTemplateSchemas_Id_seq" OWNED BY public."ReportTemplateSchemas"."Id";
 
 
 --
--- Name: ReportTemplates; Type: TABLE; Schema: public; Owner: postgres
+-- Name: ReportTemplates; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public."ReportTemplates" (
@@ -138,10 +126,8 @@ CREATE TABLE public."ReportTemplates" (
 );
 
 
-ALTER TABLE public."ReportTemplates" OWNER TO postgres;
-
 --
--- Name: ReportTemplates_Id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: ReportTemplates_Id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public."ReportTemplates_Id_seq"
@@ -153,17 +139,15 @@ CREATE SEQUENCE public."ReportTemplates_Id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."ReportTemplates_Id_seq" OWNER TO postgres;
-
 --
--- Name: ReportTemplates_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: ReportTemplates_Id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public."ReportTemplates_Id_seq" OWNED BY public."ReportTemplates"."Id";
 
 
 --
--- Name: vReportTemplates; Type: VIEW; Schema: public; Owner: postgres
+-- Name: vReportTemplates; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public."vReportTemplates" AS
@@ -176,98 +160,36 @@ CREATE VIEW public."vReportTemplates" AS
      LEFT JOIN public."ReportTemplateSchemas" rts ON ((rts."Id" = rt."SchemaId")));
 
 
-ALTER TABLE public."vReportTemplates" OWNER TO postgres;
-
 --
--- Name: Instances Id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: Instances Id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Instances" ALTER COLUMN "Id" SET DEFAULT nextval('public."Instances_Id_seq"'::regclass);
 
 
 --
--- Name: ReportTemplateQueries Id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries Id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateQueries" ALTER COLUMN "Id" SET DEFAULT nextval('public."ReportTemplateQueries_Id_seq"'::regclass);
 
 
 --
--- Name: ReportTemplateSchemas Id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas Id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateSchemas" ALTER COLUMN "Id" SET DEFAULT nextval('public."ReportTemplateSchemas_Id_seq"'::regclass);
 
 
 --
--- Name: ReportTemplates Id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: ReportTemplates Id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplates" ALTER COLUMN "Id" SET DEFAULT nextval('public."ReportTemplates_Id_seq"'::regclass);
 
 
 --
--- Data for Name: Instances; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."Instances" ("Id", "Name") FROM stdin;
-\.
-
-
---
--- Data for Name: ReportTemplateQueries; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."ReportTemplateQueries" ("Id", "TemplateId", "QueryText", "Name", "QueryType") FROM stdin;
-\.
-
-
---
--- Data for Name: ReportTemplateSchemas; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."ReportTemplateSchemas" ("Id", "InstanceId", "Name") FROM stdin;
-\.
-
-
---
--- Data for Name: ReportTemplates; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."ReportTemplates" ("Id", "SchemaId", "Name", "OdtWithoutQueries") FROM stdin;
-\.
-
-
---
--- Name: Instances_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."Instances_Id_seq"', 9, true);
-
-
---
--- Name: ReportTemplateQueries_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."ReportTemplateQueries_Id_seq"', 1, false);
-
-
---
--- Name: ReportTemplateSchemas_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."ReportTemplateSchemas_Id_seq"', 99, true);
-
-
---
--- Name: ReportTemplates_Id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public."ReportTemplates_Id_seq"', 24, true);
-
-
---
--- Name: Instances instances_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Instances instances_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."Instances"
@@ -275,7 +197,7 @@ ALTER TABLE ONLY public."Instances"
 
 
 --
--- Name: ReportTemplateQueries reporttemplatequeries_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries reporttemplatequeries_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateQueries"
@@ -283,7 +205,7 @@ ALTER TABLE ONLY public."ReportTemplateQueries"
 
 
 --
--- Name: ReportTemplates reporttemplates_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplates reporttemplates_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplates"
@@ -291,7 +213,7 @@ ALTER TABLE ONLY public."ReportTemplates"
 
 
 --
--- Name: ReportTemplateSchemas reporttemplateschemas_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas reporttemplateschemas_pk; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateSchemas"
@@ -299,42 +221,42 @@ ALTER TABLE ONLY public."ReportTemplateSchemas"
 
 
 --
--- Name: instances_name_uindex; Type: INDEX; Schema: public; Owner: postgres
+-- Name: instances_name_uindex; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX instances_name_uindex ON public."Instances" USING btree ("Name");
 
 
 --
--- Name: reporttemplates_name_schemaid_uindex; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplates_name_schemaid_uindex; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX reporttemplates_name_schemaid_uindex ON public."ReportTemplates" USING btree ("Name", "SchemaId");
 
 
 --
--- Name: reporttemplates_schemaid_index; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplates_schemaid_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX reporttemplates_schemaid_index ON public."ReportTemplates" USING btree ("SchemaId");
 
 
 --
--- Name: reporttemplateschemas_instanceid_index; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplateschemas_instanceid_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX reporttemplateschemas_instanceid_index ON public."ReportTemplateSchemas" USING btree ("InstanceId");
 
 
 --
--- Name: reporttemplateschemas_name_instanceid_uindex; Type: INDEX; Schema: public; Owner: postgres
+-- Name: reporttemplateschemas_name_instanceid_uindex; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX reporttemplateschemas_name_instanceid_uindex ON public."ReportTemplateSchemas" USING btree ("Name", "InstanceId");
 
 
 --
--- Name: ReportTemplateQueries reporttemplatequeries_reporttemplates_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplateQueries reporttemplatequeries_reporttemplates_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateQueries"
@@ -342,7 +264,7 @@ ALTER TABLE ONLY public."ReportTemplateQueries"
 
 
 --
--- Name: ReportTemplates reporttemplates_reporttemplateschemas_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplates reporttemplates_reporttemplateschemas_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplates"
@@ -350,7 +272,7 @@ ALTER TABLE ONLY public."ReportTemplates"
 
 
 --
--- Name: ReportTemplateSchemas reporttemplateschemas_instances_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ReportTemplateSchemas reporttemplateschemas_instances_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public."ReportTemplateSchemas"
