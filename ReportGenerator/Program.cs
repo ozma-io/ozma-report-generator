@@ -11,34 +11,23 @@ namespace ReportGenerator
     {
         public static void Main(string[] args)
         {
+            var configurationBuilder =
+                new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory());
             if (args.Any())
             {
                 var configPath = args[0];
-                var configuration =
-                    new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile(configPath)
-                        .AddEnvironmentVariables()
-                        .Build();
+                configurationBuilder
+                    .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), configPath));
+            }
+            configurationBuilder.AddEnvironmentVariables();
 
-                WebHost
-                    .CreateDefaultBuilder(args)
-                    .UseConfiguration(configuration)
-                    .UseStartup<Startup>()
-                    .Build()
-                    .Run();
-            }
-            else
-            {
-                CreateHostBuilder(args).Build().Run();
-            }
+            WebHost
+                .CreateDefaultBuilder(args)
+                .UseConfiguration(configurationBuilder.Build())
+                .UseStartup<Startup>()
+                .Build()
+                .Run();
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
     }
 }
