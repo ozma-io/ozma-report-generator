@@ -12,3 +12,19 @@ pipelines:
           - cp -ar ReportGenerator/bin/*/*/publish publish
         artifacts:
           - publish/**
+  branches:
+    master:
+      - step: *build_steps
+      - step:
+          name: Deploy to test
+          image: atlassian/default-image:2
+          deployment: test
+          script:
+            - dev/deploy.sh bitbucket@manager.services.ozma.io development
+      - step:
+          name: Deploy to production
+          image: atlassian/default-image:2
+          deployment: production
+          trigger: manual
+          script:
+            - dev/deploy.sh bitbucket@manager.services.ozma.io production
