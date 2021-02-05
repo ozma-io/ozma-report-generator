@@ -1,14 +1,15 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Web;
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -114,15 +115,20 @@ namespace ReportGenerator
                                 return Task.CompletedTask;
                             }
                         };
+                        if (Environment.IsDevelopment())
+                        {
+                                options.NonceCookie.SameSite = SameSiteMode.Unspecified;
+                                options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+                        }
                     }
                 );
             services.AddControllersWithViews();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 IdentityModelEventSource.ShowPII = true;

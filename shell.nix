@@ -5,6 +5,7 @@ let
     name = "document-generation";
     targetPkgs = pkgs: with pkgs; [
       dotnet-sdk_3
+      unoconv
     ];
     extraOutputsToInstall = [ "dev" ];
     profile = ''
