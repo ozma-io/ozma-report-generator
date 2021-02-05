@@ -72,14 +72,15 @@ namespace ReportGenerator.Controllers
                 return NotFound("Template '" + templateName + "' not found");
             }
 
-            var authFail = false;
             var isAuthenticated = CreateTokenProcessor();
-            if ((!isAuthenticated) || (TokenProcessor == null)) authFail = true;
+            if ((!isAuthenticated) || (TokenProcessor == null))
+            {
+                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
+            }
 
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, TokenProcessor);
             var checkAccess = await funDbApiConnector.CheckAccess();
-            if (checkAccess == HttpStatusCode.Unauthorized) authFail = true;
-            if (authFail)
+            if (checkAccess == HttpStatusCode.Unauthorized) 
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
