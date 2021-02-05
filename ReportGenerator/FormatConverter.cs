@@ -9,6 +9,10 @@ namespace ReportGenerator
         {
             var workingDirectory = configuration["UnoConvSettings:WorkingDirectory"];
             var fileName = configuration["UnoConvSettings:FileName"];
+            if (string.IsNullOrEmpty(fileName))
+            {
+                fileName = "unoconv";
+            }
             var arguments = configuration["UnoConvSettings:Arguments"];
             var unoconv = new ProcessStartInfo(workingDirectory + fileName)
             {
