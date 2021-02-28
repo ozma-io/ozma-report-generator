@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -26,11 +27,14 @@ namespace ReportGenerator.FunDbApi
             }
         }
 
+        public List<BarCodeFieldValue> BarCodeFieldValues { get; private set; }
+
         public FunDbQuery(string name, string queryTextWithoutParameterValues, QueryType queryType)
         {
             Name = name;
             QueryTextWithoutParameterValues = queryTextWithoutParameterValues;
             QueryType = queryType;
+            BarCodeFieldValues = new List<BarCodeFieldValue>();
         }
 
         public async Task LoadDataAsync(FunDbApiConnector funDbApiConnector, Dictionary<string, object> queryParametersWithValues)
@@ -109,6 +113,7 @@ namespace ReportGenerator.FunDbApi
                     {
                         throw new Exception("Wrong FunDb query type: " + QueryType);
                     }
+                    BarCodeFieldValues = GetBarCodeFieldValues(viewExprResult);
                 }
                 else
                 {
@@ -116,6 +121,144 @@ namespace ReportGenerator.FunDbApi
                 }
             }
             _result = result;
+        }
+
+        private static List<BarCodeFieldValue> GetBarCodeFieldValues(ViewExprResult viewExprResult)
+        {
+            var result = new List<BarCodeFieldValue>();
+            foreach (var row in viewExprResult.result.rows)
+            {
+                for (var colNum = 0; colNum < viewExprResult.info.columns.Count(); colNum++)
+                {
+                    var columnName = viewExprResult.info.columns[colNum].name;
+                    var uvAttributes = (IDictionary<string, object>) viewExprResult.result.attributes;
+                    var columnAttributes = (IDictionary<string, object>) viewExprResult.result.columnAttributes[colNum];
+                    var rowAttributes = (IDictionary<string, object>?) row.attributes;
+                    var valueAttributes = (IDictionary<string, object>?) row.values[colNum].attributes;
+
+                    object? controlAttribute = null;
+                    if ((valueAttributes != null) && (valueAttributes.ContainsKey("control")))
+                        controlAttribute = valueAttributes["control"];
+                    else if ((rowAttributes != null) && (rowAttributes.ContainsKey("control")))
+                        controlAttribute = rowAttributes["control"];
+                    else if ((columnAttributes != null) && (columnAttributes.ContainsKey("control")))
+                        controlAttribute = columnAttributes["control"];
+                    else if ((uvAttributes != null) && (uvAttributes.ContainsKey("control")))
+                        controlAttribute = uvAttributes["control"];
+
+                    if ((controlAttribute != null) && ((controlAttribute.ToString() == "barcode") ||
+                                                       (controlAttribute.ToString() == "qrcode")))
+                    {
+                        var domainId = row.domainId.ToString();
+                        if (domainId != null)
+                        {
+                            var domain = ((IDictionary<string, object>) viewExprResult.info.domains)[domainId];
+                            if (domain != null)
+                            {
+                                var columnInfo = ((IDictionary<string, object>) domain)[columnName];
+                                if (columnInfo != null)
+                                {
+                                    string? entityName = null;
+                                    string? schemaName = null;
+                                    var _ref =
+                                        (IDictionary<string, object>) ((IDictionary<string, object>) columnInfo)["ref"];
+                                    if (_ref["name"].ToString() == "id")
+                                    {
+                                        var entity = (IDictionary<string, object>) _ref["entity"];
+                                        if (entity != null)
+                                        {
+                                            entityName = entity["name"].ToString();
+                                            schemaName = entity["schema"].ToString();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var field =
+                                            (IDictionary<string, object>) ((IDictionary<string, object>) columnInfo)[
+                                                "field"];
+                                        if (field != null)
+                                        {
+                                            var fieldType = (IDictionary<string, object>) field["fieldType"];
+                                            if ((fieldType != null) && (fieldType["type"].ToString() == "reference"))
+                                            {
+                                                var entity = (IDictionary<string, object>) fieldType["entity"];
+                                                if (entity != null)
+                                                {
+                                                    entityName = entity["name"].ToString();
+                                                    schemaName = entity["schema"].ToString();
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if ((entityName != null) && (schemaName != null))
+                                    {
+                                        var fieldValue = row.values[colNum].value;
+                                        string fieldValueToDisplay;
+                                        if (row.values[colNum].pun != null)
+                                            fieldValueToDisplay = row.values[colNum].pun.ToString();
+                                        else fieldValueToDisplay = row.values[colNum].value.ToString();
+
+                                        if (controlAttribute.ToString() == "barcode")
+                                        {
+                                            result.Add(new BarCodeFieldValue
+                                            {
+                                                QueryFieldName = columnName,
+                                                CodeType = BarCodeType.BarCode,
+                                                ValueToEncode = fieldValue.ToString(),
+                                                FieldValue = fieldValueToDisplay
+                                            });
+
+                                        }
+                                        else if (controlAttribute.ToString() == "qrcode")
+                                        {
+                                            var valueToEncode = "1/" + schemaName + "/" + entityName + "/" + fieldValue.ToString();
+                                            result.Add(new BarCodeFieldValue
+                                            {
+                                                QueryFieldName = columnName,
+                                                CodeType = BarCodeType.QrCode,
+                                                ValueToEncode = valueToEncode,
+                                                FieldValue = fieldValueToDisplay
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        public void ChangeBarCodeFieldValueInResult(BarCodeFieldValue barCodeFieldValue, string newValue)
+        {
+            if (_result != null)
+            {
+                if (QueryType == QueryType.SingleValue)
+                {
+                    if (_result.ToString() == barCodeFieldValue.FieldValue) _result = newValue;
+                }
+                else if (QueryType == QueryType.SingleRow)
+                {
+                    if (((ExpandoObject) _result).Any(p =>
+                        (p.Key == barCodeFieldValue.QueryFieldName) &&
+                        (p.Value.ToString() == barCodeFieldValue.FieldValue)))
+                    {
+                        ((IDictionary<string, object>) _result)[barCodeFieldValue.QueryFieldName] = newValue;
+                    }
+                }
+                else if (QueryType == QueryType.ManyRows)
+                {
+                    foreach (ExpandoObject item in (List<ExpandoObject>) _result)
+                    {
+                        if (item.Any(p =>
+                            (p.Key == barCodeFieldValue.QueryFieldName) &&
+                            (p.Value.ToString() == barCodeFieldValue.FieldValue)))
+                            ((IDictionary<string, object>) item)[barCodeFieldValue.QueryFieldName] = newValue;
+                    }
+                }
+            }
         }
     }
 }

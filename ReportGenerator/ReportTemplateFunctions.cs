@@ -100,12 +100,7 @@ namespace ReportGenerator
                 if (!templateExpressions.Any())
                     throw new Exception("No {{ }} expressions found in template");
 
-                foreach (var loadedQuery in loadedQueries)
-                {
-                    if (loadedQuery.Result != null)
-                        data.Add(loadedQuery.Name, loadedQuery.Result);
-                }
-
+                #region syntax check
                 foreach (var templateExpression in templateExpressions)
                 {
                     var loadedQuery = loadedQueries.FirstOrDefault(p => p.Name == templateExpression.QueryName);
@@ -129,6 +124,7 @@ namespace ReportGenerator
                                                         " error: field " + fieldName +
                                                         " not found in FunDb query results");
                             }
+
                             break;
                         case QueryType.ManyRows:
                             if (!(loadedQuery.Result is List<ExpandoObject>))
@@ -144,12 +140,39 @@ namespace ReportGenerator
                                                             " not found in FunDb query results");
                                 }
                             }
+
                             break;
                     }
                 }
-                var context = new TemplateContext(data);
+                #endregion
+
                 var odtTemplate = new OdtTemplate(odtWithoutQueries);
+                var imagesToInsertFileNames = new List<string>();
+
+                foreach (var loadedQuery in loadedQueries)
+                {
+                    if (loadedQuery.Result != null)
+                    {
+                        if (loadedQuery.BarCodeFieldValues.Any())
+                        {
+                            var barCodeGenerator = new BarCodeGenerator();
+                            foreach (var barCodeFieldValue in loadedQuery.BarCodeFieldValues)
+                            {
+                                var imageBlob =
+                                    barCodeGenerator.Generate(barCodeFieldValue.CodeType, barCodeFieldValue.ValueToEncode);
+                                var documentBlob = odtTemplate.TemplateDocument.AddOrGetImage(imageBlob);
+                                loadedQuery.ChangeBarCodeFieldValueInResult(barCodeFieldValue,
+                                    documentBlob.Blob.FileName);
+                                imagesToInsertFileNames.Add(documentBlob.Blob.FileName);
+                            }
+                        }
+                        data.Add(loadedQuery.Name, loadedQuery.Result);
+                    }
+                }
+                var context = new TemplateContext(data);
                 result = await odtTemplate.RenderAsync(context);
+                if (imagesToInsertFileNames.Any())
+                    OpenDocumentTextFunctions.InsertImages(result, imagesToInsertFileNames);
             }
             else
             {

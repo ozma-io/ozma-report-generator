@@ -182,5 +182,21 @@ namespace ReportGenerator
             }
             return result;
         }
+
+        public static OdfDocument InsertImages(OdfDocument odt, List<string> imageFileNames)
+        {
+            var contentXml = odt.ReadMainContentXml();
+            foreach (var imageFileName in imageFileNames)
+            {
+                var stringFrom = imageFileName;
+                var stringTo =
+                    "<draw:frame svg:width=\"150px\" svg:height=\"150px\" draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
+                    imageFileName +
+                    "\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\" draw:mime-type=\"image/png\"/></draw:frame>";
+                contentXml.InnerXml = contentXml.InnerXml.Replace(stringFrom, stringTo);
+            }
+            odt.WriteMainContentXml(contentXml);
+            return odt;
+        }
     }
 }
