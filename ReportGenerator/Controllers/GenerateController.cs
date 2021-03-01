@@ -25,36 +25,7 @@ namespace ReportGenerator.Controllers
         public GenerateController(IConfiguration configuration) : base(configuration)
         {
         }
-
-        [AllowAnonymous]
-        [Route("api/test")]
-        public async Task<IActionResult?> Test()
-        {
-            var codeGenerator = new BarCodeGenerator();
-            var barCode = codeGenerator.Generate(BarCodeType.BarCode, "038000356216");
-            var qrCode = codeGenerator.Generate(BarCodeType.QrCode, "блабла");
-            
-            var template = await OdfDocument.LoadFromAsync(@"d:\\test.odt");
-            var odtTemplate = new OdtTemplate(template);
-            var blob1 = odtTemplate.TemplateDocument.AddOrGetImage(barCode);
-            var blob2 = odtTemplate.TemplateDocument.AddOrGetImage(qrCode);
-            
-            var data = new Dictionary<string, object>()
-            {
-                { "barCode", blob1.Blob.FileName },
-                { "qrCode", blob2.Blob.FileName }
-            };
-            var imageFileNames = new List<string>();
-            imageFileNames.Add(blob1.Blob.FileName);
-            imageFileNames.Add(blob2.Blob.FileName);
-
-            var context = new TemplateContext(data);
-            var doc = await odtTemplate.RenderAsync(context);
-            OpenDocumentTextFunctions.InsertImages(doc, imageFileNames);
-            await doc.SaveAsync(@"d:\\test2.odt");
-            return null;
-        }
-
+        
         [HttpGet]
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.odt")]
         public async Task<IActionResult?> GetOdt(string instanceName, string schemaName, string templateName, string fileName)
@@ -183,7 +154,7 @@ namespace ReportGenerator.Controllers
                                     mediaType = new MediaTypeHeaderValue("text/html");
                                     break;
                                 case "txt":
-                                    mediaType = new MediaTypeHeaderValue("text/html");
+                                    mediaType = new MediaTypeHeaderValue("text/plain; charset=utf-8");
                                     break;
 
                             }
