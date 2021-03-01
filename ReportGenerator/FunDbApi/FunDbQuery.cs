@@ -195,8 +195,9 @@ namespace ReportGenerator.FunDbApi
                                     {
                                         var fieldValue = row.values[colNum].value;
                                         string fieldValueToDisplay;
-                                        if (row.values[colNum].pun != null)
-                                            fieldValueToDisplay = row.values[colNum].pun.ToString();
+                                        var pun = row.values[colNum].pun;
+                                        if (pun != null)
+                                            fieldValueToDisplay = pun.ToString();
                                         else fieldValueToDisplay = row.values[colNum].value.ToString();
 
                                         if (controlAttribute.ToString() == "barcode")
