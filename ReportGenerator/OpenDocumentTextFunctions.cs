@@ -188,12 +188,12 @@ namespace ReportGenerator
             var contentXml = odt.ReadMainContentXml();
             foreach (var imageFileName in imageFileNames)
             {
-                var stringFrom = imageFileName;
+                var pattern = "((?<!xlink:href=\"Pictures\\/)" + imageFileName.Replace(".", "\\.") + ")" ;
                 var stringTo =
-                    "<draw:frame svg:width=\"150px\" svg:height=\"150px\" draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
+                    "<draw:frame draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
                     imageFileName +
                     "\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\" draw:mime-type=\"image/png\"/></draw:frame>";
-                contentXml.InnerXml = contentXml.InnerXml.Replace(stringFrom, stringTo);
+                contentXml.InnerXml = Regex.Replace(contentXml.InnerXml, pattern, stringTo, RegexOptions.Singleline | RegexOptions.Compiled);
             }
             odt.WriteMainContentXml(contentXml);
             return odt;
