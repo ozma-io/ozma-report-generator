@@ -12,16 +12,18 @@ namespace ReportGenerator
             var image = codeType switch
             {
                 BarCodeType.QrCode => GenerateQrCode(text),
-                BarCodeType.BarCode => GenerateBarCode(text),
+                BarCodeType.Itf14 => GenerateBarCode(BarcodeLib.TYPE.ITF14, text),
+                BarCodeType.Ean13 => GenerateBarCode(BarcodeLib.TYPE.EAN13, text),
+                BarCodeType.Code39 => GenerateBarCode(BarcodeLib.TYPE.CODE39, text),
                 _ => throw new Exception("Unknown code type"),
             };
             return image;
         }
         
-        private Image GenerateBarCode(string text)
+        private Image GenerateBarCode(BarcodeLib.TYPE type, string text)
         {
             BarcodeLib.Barcode b = new BarcodeLib.Barcode();
-            var image = b.Encode(BarcodeLib.TYPE.CODE11, text, Color.Black, Color.White, 290, 120);
+            var image = b.Encode(type, text, Color.Black, Color.White, 290, 120);
             return image;
         }
 
