@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using QRCoder;
 using ReportGenerator.FunDbApi;
-using Sandwych.Reporting;
 
 namespace ReportGenerator
 {
     public class BarCodeGenerator
     {
-        public ImageBlob Generate(BarCodeType codeType, string text)
+        public Image Generate(BarCodeType codeType, string text)
         {
             var image = codeType switch
             {
@@ -18,20 +15,9 @@ namespace ReportGenerator
                 BarCodeType.BarCode => GenerateBarCode(text),
                 _ => throw new Exception("Unknown code type"),
             };
-            var bytes = ImageToByteArray(image);
-            var blob = new ImageBlob("bmp", bytes);
-            return blob;
+            return image;
         }
-
-        private byte[] ImageToByteArray(Image image)
-        {
-            using (var stream = new MemoryStream())
-            {
-                image.Save(stream, ImageFormat.Bmp);
-                return stream.ToArray();
-            }
-        }
-
+        
         private Image GenerateBarCode(string text)
         {
             BarcodeLib.Barcode b = new BarcodeLib.Barcode();

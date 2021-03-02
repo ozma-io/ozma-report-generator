@@ -136,6 +136,7 @@ namespace ReportGenerator.FunDbApi
                     var rowAttributes = (IDictionary<string, object>?) row.attributes;
                     var valueAttributes = (IDictionary<string, object>?) row.values[colNum].attributes;
 
+                    #region control attribute
                     object? controlAttribute = null;
                     if ((valueAttributes != null) && (valueAttributes.ContainsKey("control")))
                         controlAttribute = valueAttributes["control"];
@@ -145,6 +146,7 @@ namespace ReportGenerator.FunDbApi
                         controlAttribute = columnAttributes["control"];
                     else if ((uvAttributes != null) && (uvAttributes.ContainsKey("control")))
                         controlAttribute = uvAttributes["control"];
+                    #endregion
 
                     if ((controlAttribute != null) && ((controlAttribute.ToString() == "barcode") ||
                                                        (controlAttribute.ToString() == "qrcode")))
@@ -160,6 +162,8 @@ namespace ReportGenerator.FunDbApi
                                 {
                                     string? entityName = null;
                                     string? schemaName = null;
+                                    string? stringValueToEncode = null;
+
                                     var _ref =
                                         (IDictionary<string, object>) ((IDictionary<string, object>) columnInfo)["ref"];
                                     if (_ref["name"].ToString() == "id")
@@ -178,20 +182,32 @@ namespace ReportGenerator.FunDbApi
                                                 "field"];
                                         if (field != null)
                                         {
-                                            var fieldType = (IDictionary<string, object>) field["fieldType"];
-                                            if ((fieldType != null) && (fieldType["type"].ToString() == "reference"))
+                                            var valueType = (IDictionary<string, object>)field["valueType"];
+                                            if (valueType != null)
                                             {
-                                                var entity = (IDictionary<string, object>) fieldType["entity"];
-                                                if (entity != null)
+                                                var type = valueType["type"];
+                                                if ((type != null) && (type.ToString() == "string"))
+                                                    stringValueToEncode = row.values[colNum].value;
+                                            }
+                                            
+                                            if (stringValueToEncode == null)
+                                            {
+                                                var fieldType = (IDictionary<string, object>) field["fieldType"];
+                                                if ((fieldType != null) &&
+                                                    (fieldType["type"].ToString() == "reference"))
                                                 {
-                                                    entityName = entity["name"].ToString();
-                                                    schemaName = entity["schema"].ToString();
+                                                    var entity = (IDictionary<string, object>) fieldType["entity"];
+                                                    if (entity != null)
+                                                    {
+                                                        entityName = entity["name"].ToString();
+                                                        schemaName = entity["schema"].ToString();
+                                                    }
                                                 }
                                             }
                                         }
                                     }
 
-                                    if ((entityName != null) && (schemaName != null))
+                                    if ((stringValueToEncode != null) || ((entityName != null) && (schemaName != null)))
                                     {
                                         var fieldValue = row.values[colNum].value;
                                         string fieldValueToDisplay;
@@ -200,26 +216,47 @@ namespace ReportGenerator.FunDbApi
                                             fieldValueToDisplay = pun.ToString();
                                         else fieldValueToDisplay = row.values[colNum].value.ToString();
 
+                                        #region image_height attribute
+                                        object? imageHeightAttribute = null;
+                                        if ((valueAttributes != null) && (valueAttributes.ContainsKey("image_height")))
+                                            imageHeightAttribute = valueAttributes["image_height"];
+                                        else if ((rowAttributes != null) && (rowAttributes.ContainsKey("image_height")))
+                                            imageHeightAttribute = rowAttributes["image_height"];
+                                        else if ((columnAttributes != null) && (columnAttributes.ContainsKey("image_height")))
+                                            imageHeightAttribute = columnAttributes["image_height"];
+                                        else if ((uvAttributes != null) && (uvAttributes.ContainsKey("image_height")))
+                                            imageHeightAttribute = uvAttributes["image_height"];
+                                        #endregion
+
+                                        string? valueToEncode;
                                         if (controlAttribute.ToString() == "barcode")
                                         {
+                                            if (stringValueToEncode == null)
+                                                valueToEncode = fieldValue.ToString();
+                                            else
+                                                valueToEncode = stringValueToEncode;
                                             result.Add(new BarCodeFieldValue
                                             {
                                                 QueryFieldName = columnName,
                                                 CodeType = BarCodeType.BarCode,
-                                                ValueToEncode = fieldValue.ToString(),
-                                                FieldValue = fieldValueToDisplay
+                                                ValueToEncode = valueToEncode,
+                                                FieldValue = fieldValueToDisplay,
+                                                ImageHeightFromAttribute = (int?) imageHeightAttribute
                                             });
-
                                         }
                                         else if (controlAttribute.ToString() == "qrcode")
                                         {
-                                            var valueToEncode = "1/" + schemaName + "/" + entityName + "/" + fieldValue.ToString();
+                                            if (stringValueToEncode == null) 
+                                                valueToEncode = "1/" + schemaName + "/" + entityName + "/" + fieldValue.ToString();
+                                            else
+                                                valueToEncode = stringValueToEncode;
                                             result.Add(new BarCodeFieldValue
                                             {
                                                 QueryFieldName = columnName,
                                                 CodeType = BarCodeType.QrCode,
                                                 ValueToEncode = valueToEncode,
-                                                FieldValue = fieldValueToDisplay
+                                                FieldValue = fieldValueToDisplay,
+                                                ImageHeightFromAttribute = (int?) imageHeightAttribute
                                             });
                                         }
                                     }

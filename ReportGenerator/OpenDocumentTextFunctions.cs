@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -183,15 +184,17 @@ namespace ReportGenerator
             return result;
         }
 
-        public static OdfDocument InsertImages(OdfDocument odt, List<string> imageFileNames)
+        public static OdfDocument InsertImages(OdfDocument odt, Dictionary<string, Size> imageFileNamesWithSize)
         {
             var contentXml = odt.ReadMainContentXml();
-            foreach (var imageFileName in imageFileNames)
+            foreach (var imageFileNameWithSize in imageFileNamesWithSize)
             {
-                var pattern = "((?<!xlink:href=\"Pictures\\/)" + imageFileName.Replace(".", "\\.") + ")" ;
+                var fileName = imageFileNameWithSize.Key;
+                var size = imageFileNameWithSize.Value;
+                var pattern = "((?<!xlink:href=\"Pictures\\/)" + fileName.Replace(".", "\\.") + ")" ;
                 var stringTo =
-                    "<draw:frame draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
-                    imageFileName +
+                    "<draw:frame svg:height=\"" + size.Height + "px\" svg:width=\"" + size.Width + "px\" draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
+                    fileName +
                     "\" xlink:type=\"simple\" xlink:show=\"embed\" xlink:actuate=\"onLoad\" draw:mime-type=\"image/png\"/></draw:frame>";
                 contentXml.InnerXml = Regex.Replace(contentXml.InnerXml, pattern, stringTo, RegexOptions.Singleline | RegexOptions.Compiled);
             }

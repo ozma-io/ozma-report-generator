@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -7,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
+using Sandwych.Reporting;
 using Sandwych.Reporting.OpenDocument;
 using TemplateContext = Sandwych.Reporting.TemplateContext;
 
@@ -14,6 +17,8 @@ namespace ReportGenerator
 {
     public static class ReportTemplateFunctions
     {
+        private const int defaultImageHeight = 35;
+
         //private static Dictionary<string, string> GetParameters(ReportTemplate template)
         //{
         //    var result = new Dictionary<string, string>();
@@ -147,7 +152,7 @@ namespace ReportGenerator
                 #endregion
 
                 var odtTemplate = new OdtTemplate(odtWithoutQueries);
-                var imagesToInsertFileNames = new List<string>();
+                var imagesToInsertFileNamesWithImageSize = new Dictionary<string, Size>();
 
                 foreach (var loadedQuery in loadedQueries)
                 {
@@ -158,12 +163,22 @@ namespace ReportGenerator
                             var barCodeGenerator = new BarCodeGenerator();
                             foreach (var barCodeFieldValue in loadedQuery.BarCodeFieldValues)
                             {
-                                var imageBlob =
-                                    barCodeGenerator.Generate(barCodeFieldValue.CodeType, barCodeFieldValue.ValueToEncode);
+                                var image = barCodeGenerator.Generate(barCodeFieldValue.CodeType,
+                                    barCodeFieldValue.ValueToEncode);
+                                var bytes = ImageToByteArray(image);
+                                var imageBlob = new ImageBlob("bmp", bytes);
                                 var documentBlob = odtTemplate.TemplateDocument.AddOrGetImage(imageBlob);
                                 loadedQuery.ChangeBarCodeFieldValueInResult(barCodeFieldValue,
                                     documentBlob.Blob.FileName);
-                                imagesToInsertFileNames.Add(documentBlob.Blob.FileName);
+
+                                var height = defaultImageHeight; 
+                                if (barCodeFieldValue.ImageHeightFromAttribute != null)
+                                    height = (int) barCodeFieldValue.ImageHeightFromAttribute;
+                                var imageRatio = (float)image.Width / image.Height;
+                                var width = (int)(height * imageRatio);
+                                var size = new Size(width, height);
+                                if (!imagesToInsertFileNamesWithImageSize.ContainsKey(documentBlob.Blob.FileName))
+                                    imagesToInsertFileNamesWithImageSize.Add(documentBlob.Blob.FileName, size);
                             }
                         }
                         data.Add(loadedQuery.Name, loadedQuery.Result);
@@ -171,8 +186,8 @@ namespace ReportGenerator
                 }
                 var context = new TemplateContext(data);
                 result = await odtTemplate.RenderAsync(context);
-                if (imagesToInsertFileNames.Any())
-                    OpenDocumentTextFunctions.InsertImages(result, imagesToInsertFileNames);
+                if (imagesToInsertFileNamesWithImageSize.Any())
+                    OpenDocumentTextFunctions.InsertImages(result, imagesToInsertFileNamesWithImageSize);
             }
             else
             {
@@ -180,6 +195,15 @@ namespace ReportGenerator
             }
 
             return result;
+        }
+
+        private static byte[] ImageToByteArray(Image image)
+        {
+            using (var stream = new MemoryStream())
+            {
+                image.Save(stream, ImageFormat.Bmp);
+                return stream.ToArray();
+            }
         }
     }
 }

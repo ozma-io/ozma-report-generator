@@ -85,9 +85,17 @@ namespace ReportGenerator.Controllers
             }
 
             ReportTemplate? template = null;
-            using (var repository = new ReportTemplateRepository(configuration, instanceName))
+
+            try
             {
-                template = await repository.LoadTemplate(schemaName, templateName);
+                using (var repository = new ReportTemplateRepository(configuration, instanceName))
+                {
+                    template = await repository.LoadTemplate(schemaName, templateName);
+                }
+            }
+            catch(Exception e)
+            {
+                return NotFound(e.Message);
             }
 
             if (template == null)
