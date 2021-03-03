@@ -240,6 +240,10 @@ namespace ReportGenerator.FunDbApi
                                                      (uvAttributes.ContainsKey("image_height")))
                                                 imageHeightAttribute = uvAttributes["image_height"];
 
+                                            int? imageHeightAttributeInt = null;
+                                            if (imageHeightAttribute != null)
+                                                imageHeightAttributeInt = Convert.ToInt32(imageHeightAttribute);
+
                                             #endregion
 
                                             string? valueToEncode;
@@ -257,7 +261,7 @@ namespace ReportGenerator.FunDbApi
                                                     QueryFieldName = columnName,
                                                     ValueToEncode = valueToEncode,
                                                     FieldValue = fieldValueToDisplay,
-                                                    ImageHeightFromAttribute = (int?) imageHeightAttribute
+                                                    ImageHeightFromAttribute = imageHeightAttributeInt
                                                 };
                                                 switch (controlAttributeStr)
                                                 {
@@ -286,7 +290,7 @@ namespace ReportGenerator.FunDbApi
                                                     CodeType = BarCodeType.QrCode,
                                                     ValueToEncode = valueToEncode,
                                                     FieldValue = fieldValueToDisplay,
-                                                    ImageHeightFromAttribute = (int?) imageHeightAttribute
+                                                    ImageHeightFromAttribute = imageHeightAttributeInt
                                                 });
                                             }
                                         }

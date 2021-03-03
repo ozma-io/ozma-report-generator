@@ -22,7 +22,10 @@ namespace ReportGenerator
         
         private Image GenerateBarCode(BarcodeLib.TYPE type, string text)
         {
-            BarcodeLib.Barcode b = new BarcodeLib.Barcode();
+            BarcodeLib.Barcode b = new BarcodeLib.Barcode
+            {
+                IncludeLabel = true
+            };
             var image = b.Encode(type, text, Color.Black, Color.White, 290, 120);
             return image;
         }
