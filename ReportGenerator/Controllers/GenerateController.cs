@@ -55,13 +55,9 @@ namespace ReportGenerator.Controllers
                         <script>
                             var oldWindow = window;
                             var newWindow = window.open('/api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}{HttpContext.Request.QueryString}', '_blank');
-                            /* newWindow.addEventListener('load', function() {{
-                             *     oldWindow.close();
-                             *     newWindow.close();
-                             * }});
-                             * newWindow.onblur = () => {{
-                             *     newWindow.close();
-                             * }}; */
+                            newWindow.onblur = () => {{
+                                newWindow.close();
+                            }};
                             if (newWindow) {{
                               oldWindow.close();
                             }}
