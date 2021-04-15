@@ -40,6 +40,7 @@ namespace ReportGenerator.Controllers
             return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
         }
 
+        /* This mess is intented to fix unwanted behavior with blank pages when server redirects to auth and then back */
         private IActionResult? CheckAuthAndGetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
             var isAuthenticated = CreateTokenProcessor();
