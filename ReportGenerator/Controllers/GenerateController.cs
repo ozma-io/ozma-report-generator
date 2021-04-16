@@ -25,37 +25,48 @@ namespace ReportGenerator.Controllers
         public GenerateController(IConfiguration configuration) : base(configuration)
         {
         }
-        
+
         [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.odt")]
-        public async Task<IActionResult?> GetOdt(string instanceName, string schemaName, string templateName, string fileName)
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.{format}")]
+        public IActionResult? GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, "odt");
+            return CheckAuthAndGetReport(instanceName, schemaName, templateName, fileName, format);
         }
 
         [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.pdf")]
-        public async Task<IActionResult?> GetPdf(string instanceName, string schemaName, string templateName, string fileName)
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{filename}.{format}")]
+        public async Task<IActionResult?> GetReportDirectly(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, "pdf");
+            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
         }
 
-        [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.html")]
-        public async Task<IActionResult?> GetHtml(string instanceName, string schemaName, string templateName, string fileName)
+        /* This mess is intented to fix unwanted behavior with blank pages when server redirects to auth and then back */
+        private IActionResult? CheckAuthAndGetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, "html");
+            var isAuthenticated = CreateTokenProcessor();
+            if ((!isAuthenticated) || (TokenProcessor == null))
+            {
+                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
+            }
+
+            return new ContentResult
+                {
+                    ContentType = "text/html",
+                    Content = $@"<div>Redirecting...</div>
+                        <script>
+                            var oldWindow = window;
+                            var newWindow = window.open('/api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}{HttpContext.Request.QueryString}', '_blank');
+                            newWindow.onblur = () => {{
+                                newWindow.close();
+                            }};
+                            if (newWindow) {{
+                              oldWindow.close();
+                            }}
+                        </script>"
+                };
         }
 
-        [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.txt")]
-        public async Task<IActionResult?> GetTxt(string instanceName, string schemaName, string templateName, string fileName)
-        {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, "txt");
-        }
-
-        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName,
-            string? format)
+        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
             if (string.IsNullOrEmpty(instanceName))
             {
