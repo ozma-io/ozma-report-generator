@@ -37,7 +37,7 @@ namespace ReportGenerator.Controllers
         [Route("api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{filename}.{format}")]
         public async Task<IActionResult?> GetReportDirectly(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
+            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format, HttpContext.Request.Path + HttpContext.Request.QueryString);
         }
 
         /* This mess is intented to fix unwanted behavior with blank pages when server redirects to auth and then back */
@@ -66,8 +66,9 @@ namespace ReportGenerator.Controllers
                 };
         }
 
-        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format)
+        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format, PathString? redirectIfErrorTo=null)
         {
+            var redirectIfErrorPath = redirectIfErrorTo == null ? HttpContext.Request.Path + HttpContext.Request.QueryString : redirectIfErrorTo.ToString();
             if (string.IsNullOrEmpty(instanceName))
             {
                 throw new Exception("No InstanceName specified");
@@ -117,7 +118,7 @@ namespace ReportGenerator.Controllers
             var isAuthenticated = CreateTokenProcessor();
             if ((!isAuthenticated) || (TokenProcessor == null))
             {
-                return LocalRedirect(HttpContext.Request.Path.ToString().Replace("generateDirectly", "generate") + HttpContext.Request.QueryString);
+                return LocalRedirect(redirectIfErrorPath);
             }
 
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, TokenProcessor);
@@ -126,7 +127,7 @@ namespace ReportGenerator.Controllers
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-                return LocalRedirect(HttpContext.Request.Path.ToString().Replace("generateDirectly", "generate") + HttpContext.Request.QueryString);
+                return LocalRedirect(redirectIfErrorPath);
             }
             var generatedReport =
                 await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
