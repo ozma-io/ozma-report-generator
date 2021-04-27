@@ -117,16 +117,16 @@ namespace ReportGenerator.Controllers
             var isAuthenticated = CreateTokenProcessor();
             if ((!isAuthenticated) || (TokenProcessor == null))
             {
-                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
+                return LocalRedirect(HttpContext.Request.Path.ToString().Replace("generateDirectly", "generate") + HttpContext.Request.QueryString);
             }
 
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, TokenProcessor);
             var checkAccess = await funDbApiConnector.CheckAccess();
-            if (checkAccess == HttpStatusCode.Unauthorized) 
+            if (checkAccess == HttpStatusCode.Unauthorized)
             {
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
+                return LocalRedirect(HttpContext.Request.Path.ToString().Replace("generateDirectly", "generate") + HttpContext.Request.QueryString);
             }
             var generatedReport =
                 await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
@@ -149,7 +149,7 @@ namespace ReportGenerator.Controllers
                 }
                 else if ((format == "pdf") || (format == "html") || (format == "txt"))
                 {
-                    var odtFilePath = Path.GetTempFileName(); 
+                    var odtFilePath = Path.GetTempFileName();
                     var newFilePath = odtFilePath.Replace(".tmp", "." + format);
                     try
                     {
