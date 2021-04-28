@@ -27,17 +27,19 @@ namespace ReportGenerator.Controllers
         }
 
         [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{filename}.{format}")]
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{fileName}.{format}")]
         public IActionResult? GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
             return CheckAuthAndGetReport(instanceName, schemaName, templateName, fileName, format);
         }
 
         [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{filename}.{format}")]
+        [Route("api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}")]
         public async Task<IActionResult?> GetReportDirectly(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format, HttpContext.Request.Path + HttpContext.Request.QueryString);
+            // FIXME: use RouteUrl instead!
+            var generatePath = $"api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}";
+            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format, generatePath + HttpContext.Request.QueryString);
         }
 
         /* This mess is intented to fix unwanted behavior with blank pages when server redirects to auth and then back */
