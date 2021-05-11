@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Security.Authentication;
 using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -34,9 +35,11 @@ namespace ReportGenerator
               // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
               return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
             } else {
-              var accessTokenFromHeader = httpContext.Request.Headers["access_token"];
-              if (accessTokenFromHeader.Count == 0) throw new Exception("Access token not found");
-              return new TokenProcessor(configuration, httpContext, accessTokenFromHeader);
+              var accessTokenFromHeader = httpContext.Request.Headers["Authorization"];
+              if (accessTokenFromHeader.Count == 0) throw new AuthenticationException("Access token not found");
+              var accessToken = accessTokenFromHeader.ToString().Split(' ');
+              if (accessToken.Length != 2) throw new AuthenticationException("Wrong access token format");
+              return new TokenProcessor(configuration, httpContext, accessToken[1]);
             }
         }
 
