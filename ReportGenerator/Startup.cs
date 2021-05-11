@@ -144,7 +144,7 @@ namespace ReportGenerator
             // app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
             app.UseCors(builder => builder
                 .SetIsOriginAllowedToAllowWildcardSubdomains()
-                .WithOrigins("https://*.ozma.org", "http://localhost:8080")
+                .WithOrigins("https://*.ozma.org", "https://*.ozma-dev.org", "http://localhost:8080")
                 .AllowAnyHeader()
                 );
 
