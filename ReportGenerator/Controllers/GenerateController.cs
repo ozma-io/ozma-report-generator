@@ -28,49 +28,13 @@ namespace ReportGenerator.Controllers
 
         [HttpGet]
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{fileName}.{format}")]
-        public IActionResult? GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
+        public async Task<IActionResult?> GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return CheckAuthAndGetReport(instanceName, schemaName, templateName, fileName, format);
+            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
         }
 
-        [HttpGet]
-        [Route("api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}")]
-        public async Task<IActionResult?> GetReportDirectly(string instanceName, string schemaName, string templateName, string fileName, string format)
+        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            // FIXME: use RouteUrl instead!
-            var generatePath = $"api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}";
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format, generatePath + HttpContext.Request.QueryString);
-        }
-
-        /* This mess is intented to fix unwanted behavior with blank pages when server redirects to auth and then back */
-        private IActionResult? CheckAuthAndGetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
-        {
-            var isAuthenticated = CreateTokenProcessor();
-            if ((!isAuthenticated) || (TokenProcessor == null))
-            {
-                return LocalRedirect(HttpContext.Request.Path + HttpContext.Request.QueryString);
-            }
-
-            return new ContentResult
-                {
-                    ContentType = "text/html",
-                    Content = $@"<div>Redirecting...</div>
-                        <script>
-                            var oldWindow = window;
-                            var newWindow = window.open('/api/{instanceName}/{schemaName}/{templateName}/generateDirectly/{fileName}.{format}{HttpContext.Request.QueryString}', '_blank');
-                            newWindow.onblur = () => {{
-                                newWindow.close();
-                            }};
-                            if (newWindow) {{
-                              oldWindow.close();
-                            }}
-                        </script>"
-                };
-        }
-
-        private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format, PathString? redirectIfErrorTo=null)
-        {
-            var redirectIfErrorPath = redirectIfErrorTo == null ? HttpContext.Request.Path + HttpContext.Request.QueryString : redirectIfErrorTo.ToString();
             if (string.IsNullOrEmpty(instanceName))
             {
                 throw new Exception("No InstanceName specified");
@@ -120,16 +84,20 @@ namespace ReportGenerator.Controllers
             var isAuthenticated = CreateTokenProcessor();
             if ((!isAuthenticated) || (TokenProcessor == null))
             {
-                return LocalRedirect(redirectIfErrorPath);
+                // return LocalRedirect(redirectIfErrorPath);
+                // TODO
+                throw new Exception("Unknown authorization error");
             }
 
             var funDbApiConnector = new FunDbApi.FunDbApiConnector(configuration, instanceName, TokenProcessor);
             var checkAccess = await funDbApiConnector.CheckAccess();
             if (checkAccess == HttpStatusCode.Unauthorized)
             {
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
-                return LocalRedirect(redirectIfErrorPath);
+                // await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                // await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+                // return LocalRedirect(redirectIfErrorPath);
+                // TODO
+                throw new Exception("Unknown authorization error");
             }
             var generatedReport =
                 await ReportTemplateFunctions.GenerateReport(funDbApiConnector, template, paramsWithValues);
@@ -195,9 +163,8 @@ namespace ReportGenerator.Controllers
                         System.IO.File.Delete(odtFilePath);
                     }
                 }
-                else 
+                else
                     throw new Exception("Unsupported file format: " + format);
-                
                 return result;
             }
             return null;

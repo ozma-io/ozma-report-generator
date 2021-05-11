@@ -31,6 +31,8 @@ namespace ReportGenerator
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
+
             services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -139,6 +141,13 @@ namespace ReportGenerator
             }
             app.UseStatusCodePages();
 
+            // app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader());
+            app.UseCors(builder => builder
+                .SetIsOriginAllowedToAllowWildcardSubdomains()
+                .WithOrigins("https://*.ozma.org", "http://localhost:8080")
+                .AllowAnyHeader()
+                );
+
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -153,7 +162,7 @@ namespace ReportGenerator
 
             app.UseAuthentication();
             app.UseAuthorization();
-            
+
             //app.UseSession();
 
             app.UseEndpoints(endpoints =>

@@ -28,10 +28,16 @@ namespace ReportGenerator
         {
             var principal = httpContext.User;
             var identity = (ClaimsIdentity)principal.Identity;
-            var accessToken = identity.FindFirst("access_token");
-            //await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
-            if (accessToken == null) throw new Exception("Access token not found in HttpContext");
-            return new TokenProcessor(configuration, httpContext, accessToken.Value);
+            // Token is in identity for admin panel and in headers for regular generation requests.
+            var accessTokenFromIdentity = identity.FindFirst("access_token");
+            if (accessTokenFromIdentity != null) {
+              // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
+              return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
+            } else {
+              var accessTokenFromHeader = httpContext.Request.Headers["access_token"];
+              if (accessTokenFromHeader.Count == 0) throw new Exception("Access token not found");
+              return new TokenProcessor(configuration, httpContext, accessTokenFromHeader);
+            }
         }
 
         public async Task RefreshToken()

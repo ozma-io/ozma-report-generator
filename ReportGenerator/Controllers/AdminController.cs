@@ -18,6 +18,7 @@ using Test.Models;
 
 namespace ReportGenerator.Controllers
 {
+    [Authorize]
     public class AdminController : BaseController
     {
         public AdminController(IConfiguration configuration) : base(configuration)

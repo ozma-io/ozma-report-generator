@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ReportGenerator.Controllers
 {
-    [Authorize]
+    // [Authorize]
     public abstract class BaseController : Controller
     {
         protected IConfiguration configuration;
@@ -22,11 +22,12 @@ namespace ReportGenerator.Controllers
 
         protected bool CreateTokenProcessor()
         {
-            if (!HttpContext.User.Identity.IsAuthenticated)
-            {
-                //throw new Exception("User is not authenticated");
-                return false;
-            }
+            // TODO
+            /* if (!HttpContext.User.Identity.IsAuthenticated)
+             * {
+             *     //throw new Exception("User is not authenticated");
+             *     return false;
+             * } */
             TokenProcessor = TokenProcessor.Create(configuration, HttpContext);
             return true;
         }
