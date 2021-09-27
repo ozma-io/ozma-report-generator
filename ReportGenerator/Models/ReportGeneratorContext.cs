@@ -63,6 +63,9 @@ namespace ReportGenerator.Models
                     .WithMany(p => p.ReportTemplates)
                     .HasForeignKey(d => d.SchemaId)
                     .HasConstraintName("reporttemplates_reporttemplateschemas_id_fk");
+
+                entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
+                entity.Property(e => e.Name).HasColumnName("Name");
             });
 
             modelBuilder.Entity<ReportTemplateQuery>(entity =>
@@ -103,6 +106,9 @@ namespace ReportGenerator.Models
                 entity.ToTable("ReportTemplates");
                 entity.HasOne(o => o.ReportTemplate).WithOne()
                     .HasForeignKey<ReportTemplate>(o => o.Id);
+
+                entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
+                entity.Property(e => e.Name).HasColumnName("Name");
             });
 
             OnModelCreatingPartial(modelBuilder);
