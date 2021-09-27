@@ -107,6 +107,10 @@ namespace ReportGenerator.Models
                 entity.HasOne(o => o.ReportTemplate).WithOne()
                     .HasForeignKey<ReportTemplate>(o => o.Id);
 
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
                 entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
                 entity.Property(e => e.Name).HasColumnName("Name");
             });
