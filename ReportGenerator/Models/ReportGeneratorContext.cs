@@ -100,13 +100,9 @@ namespace ReportGenerator.Models
 
             modelBuilder.Entity<VReportTemplate>(entity =>
             {
-                entity.HasNoKey();
-
-                entity.ToTable("vReportTemplates");
-
-                entity.Property(e => e.Name).HasMaxLength(50);
-
-                entity.Property(e => e.SchemaName).HasMaxLength(50);
+                entity.ToTable("ReportTemplates");
+                entity.HasOne(o => o.ReportTemplate).WithOne()
+                    .HasForeignKey<ReportTemplate>(o => o.Id);
             });
 
             OnModelCreatingPartial(modelBuilder);

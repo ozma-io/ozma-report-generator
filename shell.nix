@@ -4,12 +4,12 @@ let
   env = pkgs.buildFHSUserEnv {
     name = "document-generation";
     targetPkgs = pkgs: with pkgs; [
-      dotnet-sdk_3
+      dotnet-sdk_5
       unoconv
     ];
     extraOutputsToInstall = [ "dev" ];
     profile = ''
-      export DOTNET_ROOT=${pkgs.dotnet-sdk_3}
+      export DOTNET_ROOT=${pkgs.dotnet-sdk_5}
     '';
     runScript = pkgs.writeScript "env-shell" ''
       #!${pkgs.stdenv.shell}

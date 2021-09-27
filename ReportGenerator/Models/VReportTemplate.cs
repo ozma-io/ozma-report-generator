@@ -2,10 +2,11 @@
 {
     public partial class VReportTemplate
     {
-        public int? Id { get; set; }
+        public int Id { get; set; }
+        public int SchemaId { get; set; }
         public string Name { get; set; } = null!;
-        public int? SchemaId { get; set; }
-        public string SchemaName { get; set; } = null!;
-        public int? InstanceId { get; set; }
+
+        public ReportTemplateSchema Schema { get; set; } = null!;
+        public ReportTemplate ReportTemplate { get; set; } = null!;
     }
 }

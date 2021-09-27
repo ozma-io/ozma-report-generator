@@ -147,20 +147,6 @@ ALTER SEQUENCE public."ReportTemplates_Id_seq" OWNED BY public."ReportTemplates"
 
 
 --
--- Name: vReportTemplates; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public."vReportTemplates" AS
- SELECT rt."Id",
-    rt."Name",
-    rt."SchemaId",
-    rts."Name" AS "SchemaName",
-    rts."InstanceId"
-   FROM (public."ReportTemplates" rt
-     LEFT JOIN public."ReportTemplateSchemas" rts ON ((rts."Id" = rt."SchemaId")));
-
-
---
 -- Name: Instances Id; Type: DEFAULT; Schema: public; Owner: -
 --
 

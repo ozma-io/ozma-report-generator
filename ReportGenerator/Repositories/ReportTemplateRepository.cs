@@ -29,7 +29,7 @@ namespace ReportGenerator.Repositories
 
         public async Task<List<VReportTemplate>> LoadAllTemplates()
         {
-            return await dbContext.VReportTemplates.Where(p => p.InstanceId == instance.Id).AsNoTracking()
+            return await dbContext.VReportTemplates.Include(p => p.Schema).Where(p => p.Schema.InstanceId == instance.Id).AsNoTracking()
                 .ToListAsync();
         }
 
