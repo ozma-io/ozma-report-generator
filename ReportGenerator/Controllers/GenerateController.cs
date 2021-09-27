@@ -62,18 +62,11 @@ namespace ReportGenerator.Controllers
                 paramsWithValues.Add(queryParam.Key, queryParam.Value.ToString());
             }
 
-            ReportTemplate? template = null;
+            ReportTemplate? template;
 
-            try
+            using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-                using (var repository = new ReportTemplateRepository(configuration, instanceName))
-                {
-                    template = await repository.LoadTemplate(schemaName, templateName);
-                }
-            }
-            catch(Exception e)
-            {
-                return NotFound(e.Message);
+                template = await repository.LoadTemplate(schemaName, templateName);
             }
 
             if (template == null)
