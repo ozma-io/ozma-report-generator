@@ -114,19 +114,9 @@ namespace ReportGenerator.Controllers
 
             using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
-                try
-                {
-                    model.Name = RemoveRestrictedSymbols(model.Name);
-                    await repository.AddSchema(model);
-                    return Ok();
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+                model.Name = RemoveRestrictedSymbols(model.Name);
+                await repository.AddSchema(model);
+                return Ok();
             }
         }
 
@@ -149,18 +139,8 @@ namespace ReportGenerator.Controllers
 
             using (var repository = new ReportTemplateSchemaRepository(configuration, instanceName))
             {
-                try
-                {
-                    await repository.DeleteSchema(id);
-                    return Ok();
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+                await repository.DeleteSchema(id);
+                return Ok();
             }
         }
         #endregion
@@ -219,19 +199,9 @@ namespace ReportGenerator.Controllers
             }
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-                try
-                {
-                    model.Name = RemoveRestrictedSymbols(model.Name);
-                    await repository.AddTemplate(model);
-                    return Ok();
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+                model.Name = RemoveRestrictedSymbols(model.Name);
+                await repository.AddTemplate(model);
+                return Ok();
             }
         }
 
@@ -274,18 +244,8 @@ namespace ReportGenerator.Controllers
                     await odtWithoutQueries.SaveAsync(stream);
                     model.OdtWithoutQueries = stream.ToArray();
                 }
-                try
-                {
-                    await repository.UpdateTemplate(model);
-                    return Ok();
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+                await repository.UpdateTemplate(model);
+                return Ok();
             }
         }
 
@@ -300,18 +260,8 @@ namespace ReportGenerator.Controllers
 
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-                try
-                {
-                    await repository.DeleteTemplate(id);
-                    return Ok();
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+                await repository.DeleteTemplate(id);
+                return Ok();
             }
         }
         #endregion
