@@ -110,6 +110,10 @@ namespace ReportGenerator.Models
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
+
+                // For some reason it's needed, otherwise field names are `VReportTemplate_SchemaId` and the like.
+                entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
+                entity.Property(e => e.Name).HasColumnName("Name");
             });
 
             OnModelCreatingPartial(modelBuilder);
