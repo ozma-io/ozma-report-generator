@@ -17,7 +17,14 @@ namespace ReportGenerator.Repositories
 
         public async Task AddTemplate(ReportTemplate template)
         {
-            await dbContext.ReportTemplates.AddAsync(template);
+            var vTemplate = new VReportTemplate
+            {
+                Schema = template.Schema,
+                SchemaId = template.SchemaId,
+                Name = template.Name,
+                ReportTemplate = template,
+            };
+            await dbContext.VReportTemplates.AddAsync(vTemplate);
             await dbContext.SaveChangesAsync();
         }
 

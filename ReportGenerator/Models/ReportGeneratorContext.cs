@@ -110,9 +110,6 @@ namespace ReportGenerator.Models
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
-
-                entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
-                entity.Property(e => e.Name).HasColumnName("Name");
             });
 
             OnModelCreatingPartial(modelBuilder);
