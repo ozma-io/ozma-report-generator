@@ -181,16 +181,6 @@ namespace ReportGenerator.Controllers
             if (odtWithQueries == null) throw new Exception("Error processing odt file");
 
             var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
-            foreach (var query in queries)
-            {
-                var newQuery = new ReportTemplateQuery
-                {
-                    Name = query.Name,
-                    QueryText = query.QueryTextWithoutParameterValues,
-                    QueryType = (short) query.QueryType
-                };
-                model.ReportTemplateQueries.Add(newQuery);
-            }
             var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
             await using (var stream = new MemoryStream())
             {
@@ -201,8 +191,19 @@ namespace ReportGenerator.Controllers
             {
                 model.Name = RemoveRestrictedSymbols(model.Name);
                 await repository.AddTemplate(model);
-                return Ok();
+                foreach (var query in queries)
+                {
+                    var newQuery = new ReportTemplateQuery
+                    {
+                        Name = query.Name,
+                        QueryText = query.QueryTextWithoutParameterValues,
+                        QueryType = (short) query.QueryType
+                    };
+                    model.ReportTemplateQueries.Add(newQuery);
+                }
+                await repository.UpdateTemplate(model);
             }
+            return Ok();
         }
 
         [HttpPost]
