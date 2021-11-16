@@ -44,11 +44,8 @@ namespace ReportGenerator.Repositories
         {
             var item = dbContext.ReportTemplates.FirstOrDefault(p =>
                 (p.Schema.InstanceId == instance.Id) && (p.Id == id));
-            if (item != null)
-            {
-                dbContext.Remove(item);
-                await dbContext.SaveChangesAsync();
-            }
+            dbContext.Remove(item);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<ReportTemplate?> LoadTemplate(string schemaName, string templateName)
