@@ -68,6 +68,16 @@ namespace ReportGenerator.Models
                 entity.Property(e => e.Name).HasColumnName("Name");
             });
 
+            modelBuilder.Entity<VReportTemplate>(entity =>
+            {
+                entity.ToTable("ReportTemplates");
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(50);
+            });
+
+
             modelBuilder.Entity<ReportTemplateQuery>(entity =>
             {
                 entity.Property(e => e.Name)
@@ -99,20 +109,6 @@ namespace ReportGenerator.Models
                     .WithMany(p => p.ReportTemplateSchemas)
                     .HasForeignKey(d => d.InstanceId)
                     .HasConstraintName("reporttemplateschemas_instances_id_fk");
-            });
-
-            modelBuilder.Entity<VReportTemplate>(entity =>
-            {
-                entity.ToTable("ReportTemplates");
-                entity.HasOne(o => o.ReportTemplate).WithOne()
-                    .HasForeignKey<ReportTemplate>(o => o.Id);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.SchemaId).HasColumnName("SchemaId");
-                entity.Property(e => e.Name).HasColumnName("Name");
             });
 
             OnModelCreatingPartial(modelBuilder);

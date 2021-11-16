@@ -7,6 +7,5 @@
         public string Name { get; set; } = null!;
 
         public ReportTemplateSchema Schema { get; set; } = null!;
-        public ReportTemplate ReportTemplate { get; set; } = null!;
     }
 }
