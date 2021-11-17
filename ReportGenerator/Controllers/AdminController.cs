@@ -187,21 +187,21 @@ namespace ReportGenerator.Controllers
                 await odtWithoutQueries.SaveAsync(stream);
                 model.OdtWithoutQueries = stream.ToArray();
             }
+            model.Name = RemoveRestrictedSymbols(model.Name);
+            foreach (var query in queries)
+            {
+                var newQuery = new ReportTemplateQuery
+                {
+                    Name = query.Name,
+                    QueryText = query.QueryTextWithoutParameterValues,
+                    QueryType = (short) query.QueryType
+                };
+                model.ReportTemplateQueries.Add(newQuery);
+            }
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-                model.Name = RemoveRestrictedSymbols(model.Name);
+
                 await repository.AddTemplate(model);
-                foreach (var query in queries)
-                {
-                    var newQuery = new ReportTemplateQuery
-                    {
-                        Name = query.Name,
-                        QueryText = query.QueryTextWithoutParameterValues,
-                        QueryType = (short) query.QueryType
-                    };
-                    model.ReportTemplateQueries.Add(newQuery);
-                }
-                await repository.UpdateTemplate(model);
             }
             return Ok();
         }
