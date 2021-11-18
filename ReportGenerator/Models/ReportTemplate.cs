@@ -10,6 +10,6 @@ namespace ReportGenerator.Models
         public byte[] OdtWithoutQueries { get; set; } = null!;
 
         public ReportTemplateSchema Schema { get; set; } = null!;
-        public ICollection<ReportTemplateQuery> ReportTemplateQueries { get; set; } = null!;
+        public IList<ReportTemplateQuery> ReportTemplateQueries { get; set; } = new List<ReportTemplateQuery>();
     }
 }

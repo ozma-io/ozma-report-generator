@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +42,9 @@ namespace ReportGenerator.FunDbApi
             var result = new PermissionsResponse();
             var values = new Dictionary<string, object>();
             var request = PrepareRequest(values);
-            var client = new RestClient(GetApiUrl() + "/permissions");
+            var test = GetApiUrl() + "/permissions";
+            Debug.WriteLine("URL: " + test);
+            var client = new RestClient(test);
             var response = await client.ExecuteAsync(request);
             result.ResponseCode = response.StatusCode;
             switch (response.StatusCode)
