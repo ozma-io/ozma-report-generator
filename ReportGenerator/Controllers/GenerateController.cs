@@ -30,7 +30,17 @@ namespace ReportGenerator.Controllers
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{fileName}.{format}")]
         public async Task<IActionResult?> GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-            return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
+                try
+                {
+                    return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
+                }
+                catch (Exception e)
+                {
+                    string msg;
+                    if (e.InnerException != null) msg = e.InnerException.Message;
+                    else msg = e.Message;
+                    return StatusCode(500, msg);
+                }
         }
 
         private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format)
