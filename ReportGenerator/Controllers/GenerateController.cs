@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
@@ -22,25 +23,29 @@ namespace ReportGenerator.Controllers
     [ApiController]
     public class GenerateController : BaseController
     {
-        public GenerateController(IConfiguration configuration) : base(configuration)
+        private readonly ILogger<GenerateController> logger;
+
+        public GenerateController(ILogger<GenerateController> logger, IConfiguration configuration) : base(configuration)
         {
+            this.logger = logger;
         }
 
         [HttpGet]
         [Route("api/{instanceName}/{schemaName}/{templateName}/generate/{fileName}.{format}")]
         public async Task<IActionResult?> GetReport(string instanceName, string schemaName, string templateName, string fileName, string format)
         {
-                try
-                {
-                    return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
-                }
-                catch (Exception e)
-                {
-                    string msg;
-                    if (e.InnerException != null) msg = e.InnerException.Message;
-                    else msg = e.Message;
-                    return StatusCode(500, msg);
-                }
+            try
+            {
+                return await GenerateTemplate(instanceName, schemaName, templateName, fileName, format);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to generate report");
+                string msg;
+                if (e.InnerException != null) msg = e.InnerException.Message;
+                else msg = e.Message;
+                return StatusCode(500, msg);
+            }
         }
 
         private async Task<IActionResult?> GenerateTemplate(string instanceName, string schemaName, string templateName, string fileName, string format)
