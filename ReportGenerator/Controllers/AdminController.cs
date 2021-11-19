@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
 using ReportGenerator.Repositories;
@@ -21,8 +22,11 @@ namespace ReportGenerator.Controllers
     [Authorize]
     public class AdminController : BaseController
     {
-        public AdminController(IConfiguration configuration) : base(configuration)
+        ILogger<AdminController> logger;
+
+        public AdminController(IConfiguration configuration, ILogger<AdminController> logger) : base(configuration)
         {
+            this.logger = logger;
         }
 
         [AllowAnonymous]
@@ -172,17 +176,29 @@ namespace ReportGenerator.Controllers
                 return StatusCode(401, "relog");
             if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
-            OdfDocument? odtWithQueries = null;
-            await using (var stream = new MemoryStream())
+            OdfDocument odtWithQueries;
+            OdfDocument odtWithoutQueries;
+            IList<FunDbQuery> queries;
+            try
             {
-                await UploadedOdtFile.CopyToAsync(stream);
-                odtWithQueries = await OdfDocument.LoadFromAsync(stream);
-            }
-            if (odtWithQueries == null) throw new Exception("Error processing odt file");
+                await using (var stream = new MemoryStream())
+                {
+                    await UploadedOdtFile.CopyToAsync(stream);
+                    odtWithQueries = await OdfDocument.LoadFromAsync(stream);
+                }
 
-            var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
-            var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
-            var odtTemplate = new OdtTemplate(odtWithoutQueries);
+                queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
+                odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
+                var odtTemplate = new OdtTemplate(odtWithoutQueries);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to add template");
+                string msg;
+                if (e.InnerException != null) msg = e.InnerException.Message;
+                else msg = e.Message;
+                return StatusCode(500, msg);
+            }
 
             await using (var stream = new MemoryStream())
             {
@@ -202,7 +218,6 @@ namespace ReportGenerator.Controllers
             }
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
-
                 await repository.AddTemplate(model);
             }
             return Ok();
@@ -218,15 +233,27 @@ namespace ReportGenerator.Controllers
             if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             OdfDocument odtWithQueries;
-            await using (var stream = new MemoryStream())
+            OdfDocument odtWithoutQueries;
+            IList<FunDbQuery> queries;
+            try
             {
-                await UploadedOdtFile.CopyToAsync(stream);
-                odtWithQueries = await OdfDocument.LoadFromAsync(stream);
+                await using (var stream = new MemoryStream())
+                {
+                    await UploadedOdtFile.CopyToAsync(stream);
+                    odtWithQueries = await OdfDocument.LoadFromAsync(stream);
+                }
+                queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
+                odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
+                var odtTemplate = new OdtTemplate(odtWithoutQueries);
             }
-            var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
-
-            var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
-            var odtTemplate = new OdtTemplate(odtWithoutQueries);
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to update template");
+                string msg;
+                if (e.InnerException != null) msg = e.InnerException.Message;
+                else msg = e.Message;
+                return StatusCode(500, msg);
+            }
 
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {

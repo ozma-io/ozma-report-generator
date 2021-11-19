@@ -55,7 +55,7 @@ namespace ReportGenerator
             return result;
         }
 
-        public static List<FunDbQuery> GetQueriesFromOdt(OdfDocument odtWithQueries)
+        public static IList<FunDbQuery> GetQueriesFromOdt(OdfDocument odtWithQueries)
         {
             if (odtWithQueries == null)
             {
@@ -105,7 +105,7 @@ namespace ReportGenerator
             return odtWithQueries;
         }
 
-        public static List<TemplateExpression> GetTemplateExpressionsFromOdt(OdfDocument odt)
+        public static IList<TemplateExpression> GetTemplateExpressionsFromOdt(OdfDocument odt)
         {
             var result = new List<TemplateExpression>();
             var contentAsString = GetOdtXmlAsText(odt);
