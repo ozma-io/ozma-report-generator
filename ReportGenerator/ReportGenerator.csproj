@@ -12,6 +12,7 @@
     <PackageReference Include="BarcodeLib" Version="2.4.*" />
     <PackageReference Include="IdentityModel" Version="5.2.*" />
     <PackageReference Include="MaltReport2" Version="3.0.2-beta" />
+    <ProjectReference Include="../fluid/Fluid/Fluid.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="5.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.*">
