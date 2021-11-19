@@ -182,6 +182,8 @@ namespace ReportGenerator.Controllers
 
             var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
             var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
+            var odtTemplate = new OdtTemplate(odtWithoutQueries);
+
             await using (var stream = new MemoryStream())
             {
                 await odtWithoutQueries.SaveAsync(stream);
@@ -215,20 +217,22 @@ namespace ReportGenerator.Controllers
                 return StatusCode(401, "relog");
             if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
-            OdfDocument? odtWithQueries = null;
+            OdfDocument odtWithQueries;
             await using (var stream = new MemoryStream())
             {
                 await UploadedOdtFile.CopyToAsync(stream);
                 odtWithQueries = await OdfDocument.LoadFromAsync(stream);
             }
-            if (odtWithQueries == null) throw new Exception("Error processing odt file");
+            var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
+
+            var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
+            var odtTemplate = new OdtTemplate(odtWithoutQueries);
 
             using (var repository = new ReportTemplateRepository(configuration, instanceName))
             {
                 var model = await repository.LoadTemplate(templateId);
                 if (model == null) throw new Exception("Template with id=" + templateId + " not found");
                 model.ReportTemplateQueries.Clear();
-                var queries = OpenDocumentTextFunctions.GetQueriesFromOdt(odtWithQueries);
                 foreach (var query in queries)
                 {
                     var newQuery = new ReportTemplateQuery
@@ -239,7 +243,6 @@ namespace ReportGenerator.Controllers
                     };
                     model.ReportTemplateQueries.Add(newQuery);
                 }
-                var odtWithoutQueries = OpenDocumentTextFunctions.RemoveQueriesFromOdt(odtWithQueries);
                 await using (var stream = new MemoryStream())
                 {
                     await odtWithoutQueries.SaveAsync(stream);
