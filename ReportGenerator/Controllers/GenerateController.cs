@@ -41,10 +41,18 @@ namespace ReportGenerator.Controllers
             catch (Exception e)
             {
                 logger.LogError(e, "Failed to generate report");
+
                 string msg;
                 if (e.InnerException != null) msg = e.InnerException.Message;
                 else msg = e.Message;
-                return StatusCode(500, msg);
+
+                Response.StatusCode = 500;
+
+                return Json(new
+                {
+                    Error = "internal",
+                    Message = msg,
+                });
             }
         }
 
