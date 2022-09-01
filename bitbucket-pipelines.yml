@@ -1,5 +1,3 @@
-options:
-  max-time: 10
 pipelines:
   default:
     - step: &build_step
@@ -12,19 +10,35 @@ pipelines:
           - cp -ar ReportGenerator/bin/*/*/publish publish
         artifacts:
           - publish/**
+  pull-requests:
+    '**':
+      - step: *build_step
   branches:
     master:
       - step: *build_step
       - step:
           name: Deploy to test
-          image: atlassian/default-image:2
           deployment: test
+          caches:
+            - docker
           script:
-            - dev/deploy.sh bitbucket@manager.services.ozma.io development
+            - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
+            # Workaround for pipes not supporting private docker repos.
+            - docker pull myprocessx/upload-artifact
+            - pipe: ozma-io/upload-artifact:master
+              variables:
+                LOCAL_PATH: publish
+            - docker pull myprocessx/deploy-artifact
+            - pipe: ozma-io/deploy-artifact:master
+          artifacts:
+            - artifact.json
       - step:
           name: Deploy to production
-          image: atlassian/default-image:2
           deployment: production
           trigger: manual
+          caches:
+            - docker
           script:
-            - dev/deploy.sh bitbucket@manager.services.ozma.io production
+            - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
+            - docker pull myprocessx/deploy-artifact
+            - pipe: ozma-io/deploy-artifact:master
