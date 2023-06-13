@@ -150,7 +150,7 @@ namespace ReportGenerator.Controllers
                                 throw new Exception("File " + newFilePath + " was not created. Error message: " +
                                                     response);
                             byte[] bytes = await System.IO.File.ReadAllBytesAsync(newFilePath);
-                            MediaTypeHeaderValue? mediaType = null;
+                            MediaTypeHeaderValue mediaType;
                             switch (format)
                             {
                                 case "pdf":
@@ -162,7 +162,8 @@ namespace ReportGenerator.Controllers
                                 case "txt":
                                     mediaType = new MediaTypeHeaderValue("text/plain; charset=utf-8");
                                     break;
-
+                                default:
+                                    throw new Exception("Unknown media type");
                             }
                             result = new FileContentResult(bytes, mediaType)
                             {

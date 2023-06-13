@@ -2,7 +2,7 @@ pipelines:
   default:
     - step: &build_step
         name: Build
-        image: mcr.microsoft.com/dotnet/sdk:5.0
+        image: mcr.microsoft.com/dotnet/sdk:6.0
         caches:
           - dotnetcore
         script:
@@ -17,7 +17,7 @@ pipelines:
     master:
       - step:
           name: Build and upload
-          image: mcr.microsoft.com/dotnet/sdk:5.0
+          image: mcr.microsoft.com/dotnet/sdk:6.0
           caches:
             - dotnetcore
             - docker

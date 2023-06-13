@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Dynamic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ReportGenerator.FunDbApi;
 using ReportGenerator.Models;
 using Sandwych.Reporting;
 using Sandwych.Reporting.OpenDocument;
+using SkiaSharp;
 using TemplateContext = Sandwych.Reporting.TemplateContext;
 
 namespace ReportGenerator
@@ -18,27 +17,6 @@ namespace ReportGenerator
     public static class ReportTemplateFunctions
     {
         private const int defaultImageHeight = 35;
-
-        //private static Dictionary<string, string> GetParameters(ReportTemplate template)
-        //{
-        //    var result = new Dictionary<string, string>();
-        //    if (!string.IsNullOrEmpty(template.Parameters))
-        //    {
-        //        var list = template.Parameters.Replace(" ", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
-        //        foreach (var item in list)
-        //        {
-        //            var nameAndType = item.Split(':');
-        //            if (nameAndType.Count() == 2)
-        //            {
-        //                var parameterName = nameAndType[0];
-        //                var parameterType = nameAndType[1];
-        //                if (!result.Any(p => p.Key == parameterName))
-        //                    result.Add(parameterName, parameterType);
-        //            }
-        //        }
-        //    }
-        //    return result;
-        //}
 
         private static List<FunDbQuery> GetQueriesAsFunDb(ReportTemplate template)
         {
@@ -165,8 +143,8 @@ namespace ReportGenerator
                             {
                                 var image = barCodeGenerator.Generate(barCodeFieldValue.CodeType,
                                     barCodeFieldValue.ValueToEncode);
-                                var bytes = ImageToByteArray(image);
-                                var imageBlob = new ImageBlob("bmp", bytes);
+                                var bytes = image.Encode().ToArray();
+                                var imageBlob = new ImageBlob("png", bytes);
                                 var documentBlob = odtTemplate.TemplateDocument.AddOrGetImage(imageBlob);
                                 loadedQuery.ChangeBarCodeFieldValueInResult(barCodeFieldValue,
                                     documentBlob.Blob.FileName);
@@ -191,19 +169,10 @@ namespace ReportGenerator
             }
             else
             {
-                throw new Exception("One or more FunDb query failed");
+                throw new Exception("One or more FunDD queries failed");
             }
 
             return result;
-        }
-
-        private static byte[] ImageToByteArray(Image image)
-        {
-            using (var stream = new MemoryStream())
-            {
-                image.Save(stream, ImageFormat.Bmp);
-                return stream.ToArray();
-            }
         }
     }
 }

@@ -24,7 +24,7 @@ namespace ReportGenerator.FunDbApi
 
         private string GetApiUrl()
         {
-            var dbUrl = configuration["FunDbSettings:DatabaseServerUrl"];
+            var dbUrl = configuration["FunDbSettings:DatabaseServerUrl"]!;
             return dbUrl.Replace("{instanceName}", instanceName);
         }
 
@@ -50,8 +50,8 @@ namespace ReportGenerator.FunDbApi
             switch (response.StatusCode)
             {
                 case System.Net.HttpStatusCode.OK:
-                    var responseJson = response.Content;
-                    var permissions = JsonConvert.DeserializeObject<PermissionsResponseJson>(responseJson);
+                    var responseJson = response.Content!;
+                    var permissions = JsonConvert.DeserializeObject<PermissionsResponseJson>(responseJson)!;
                     result.ResponseJson = permissions;
                     result.IsAdmin = permissions.IsRoot;
                     break;
@@ -79,7 +79,8 @@ namespace ReportGenerator.FunDbApi
 
         private RestRequest PrepareRequest(Dictionary<string, object> parameterValues)
         {
-            var request = new RestRequest(Method.GET);
+            var request = new RestRequest();
+            request.Method = Method.Get;
             request.AddHeader("cache-control", "no-cache");
             request.AddHeader("content-type", "application/x-www-form-urlencoded");
             request.AddHeader("authorization", "Bearer " + tokenProcessor.AccessToken);

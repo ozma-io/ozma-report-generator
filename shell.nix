@@ -1,15 +1,18 @@
 { pkgs ? import <nixpkgs> {} }:
 
 let
+  dotnet = pkgs.dotnet-sdk_7;
+
   env = pkgs.buildFHSUserEnv {
     name = "document-generation";
     targetPkgs = pkgs: with pkgs; [
-      dotnet-sdk_5
+      dotnet
       unoconv
+      icu
     ];
     extraOutputsToInstall = [ "dev" ];
     profile = ''
-      export DOTNET_ROOT=${pkgs.dotnet-sdk_5}
+      export DOTNET_ROOT=${dotnet}
     '';
     runScript = pkgs.writeScript "env-shell" ''
       #!${pkgs.stdenv.shell}

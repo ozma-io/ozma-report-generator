@@ -1,42 +1,56 @@
 ﻿using System;
-using System.Drawing;
-using QRCoder;
+using SkiaSharp;
+using ZXing;
+using ZXing.Common;
+using ZXing.QrCode;
+using ZXing.SkiaSharp;
 using ReportGenerator.FunDbApi;
 
 namespace ReportGenerator
 {
     public class BarCodeGenerator
     {
-        public Image Generate(BarCodeType codeType, string text)
+        public SKImage Generate(BarCodeType codeType, string text)
         {
             var image = codeType switch
             {
                 BarCodeType.QrCode => GenerateQrCode(text),
-                BarCodeType.Itf14 => GenerateBarCode(BarcodeLib.TYPE.ITF14, text),
-                BarCodeType.Ean13 => GenerateBarCode(BarcodeLib.TYPE.EAN13, text),
-                BarCodeType.Code39 => GenerateBarCode(BarcodeLib.TYPE.CODE39, text),
+                BarCodeType.Itf14 => GenerateBarCode(BarcodeFormat.ITF, text),
+                BarCodeType.Ean13 => GenerateBarCode(BarcodeFormat.EAN_13, text),
+                BarCodeType.Code39 => GenerateBarCode(BarcodeFormat.CODE_39, text),
                 _ => throw new Exception("Unknown code type"),
             };
             return image;
         }
         
-        private Image GenerateBarCode(BarcodeLib.TYPE type, string text)
+        private SKImage GenerateBarCode(BarcodeFormat type, string text)
         {
-            BarcodeLib.Barcode b = new BarcodeLib.Barcode
-            {
-                IncludeLabel = true
+            var options = new EncodingOptions() {
+                Height = 120,
+                Width = 290,
+                PureBarcode = true,
             };
-            var image = b.Encode(type, text, Color.Black, Color.White, 290, 120);
-            return image;
+
+            var writer = new BarcodeWriter {
+                Format = BarcodeFormat.QR_CODE,
+                Options = options
+            };
+            return SKImage.FromBitmap(writer.Write(text));
         }
 
-        private Image GenerateQrCode(string text)
+        private SKImage GenerateQrCode(string text)
         {
-            QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
-            QRCode qrCode = new QRCode(qrCodeData);
-            var image = qrCode.GetGraphic(20);
-            return image;
+            var options = new QrCodeEncodingOptions() {
+                DisableECI = true,
+                CharacterSet = "UTF-8",
+                ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.Q,
+            };
+
+            var writer = new BarcodeWriter {
+                Format = BarcodeFormat.QR_CODE,
+                Options = options
+            };
+            return SKImage.FromBitmap(writer.Write(text));
         }
     }
 }
