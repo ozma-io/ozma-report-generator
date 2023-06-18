@@ -1,0 +1,20 @@
+{
+    "Kestrel": {
+	"EndPoints": {
+	    "Http": {
+	        "Url": "http://0.0.0.0:1480"
+	    }
+	}
+    },
+    "ConnectionStrings": {
+	"postgreSql": "host=localhost; Username=abbradar; Password=1"
+    },
+    "AuthSettings": {
+      "OpenIdConnectUrl": "https://account-dev.ozma.io/auth/realms/default/",
+      "ClientId": "report-generator",
+      "ClientSecret": "kek"
+    },
+    "FunDbSettings": {
+	"DatabaseServerUrl": "https://{instanceName}.api-dev.ozma-dev.org"
+    }
+}
