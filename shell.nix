@@ -1,16 +1,25 @@
-{ pkgs ? import <nixpkgs> {} }:
-
-let
-  dotnet = pkgs.dotnet-sdk_7;
+{pkgs ? import <nixpkgs> {}}: let
+  dotnet = pkgs.dotnet-sdk_8;
+  nodejs = pkgs.nodejs_22;
+  python = pkgs.python3;
 
   env = pkgs.buildFHSUserEnv {
-    name = "document-generation";
-    targetPkgs = pkgs: with pkgs; [
-      dotnet
-      unoconv
-      icu
-    ];
-    extraOutputsToInstall = [ "dev" ];
+    name = "report-generator";
+    targetPkgs = pkgs:
+      with pkgs; [
+        alejandra
+        dotnet
+        zlib
+        mono
+        lttng-ust
+        libunwind
+        kerberos
+        lldb
+        openssl
+        # Required for vsdbg
+        icu
+      ];
+    extraOutputsToInstall = ["dev"];
     profile = ''
       export DOTNET_ROOT=${dotnet}
     '';
@@ -21,13 +30,12 @@ let
   };
 
   userShell = builtins.getEnv "SHELL";
+in
+  pkgs.stdenv.mkDerivation {
+    name = "report-generator-fhs-dev";
 
-in pkgs.stdenv.mkDerivation {
-  name = "document-generation-fhs-dev";
-
-  shellHook = ''
-    exec ${env}/bin/document-generation
-  '';
-  buildCommand = "exit 1";
-}
-
+    shellHook = ''
+      exec ${env}/bin/report-generator
+    '';
+    buildCommand = "exit 1";
+  }
