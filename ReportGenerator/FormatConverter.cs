@@ -54,11 +54,11 @@ namespace ReportGenerator
                 RedirectStandardError = true,
                 RedirectStandardOutput = true
             };
-            var process = Process.Start(unoconv);
+            var process = Process.Start(unoconv)!;
             string output = process.StandardOutput.ReadToEnd();
             string error = process.StandardError.ReadToEnd();
             await process.WaitForExitAsync();
-            if (!string.IsNullOrEmpty(error))  return error;
+            if (!string.IsNullOrEmpty(error)) return error;
             return output;
         }
     }

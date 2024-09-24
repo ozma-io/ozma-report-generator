@@ -5,7 +5,6 @@
     <UserSecretsId>092b9463-f921-4cb4-af08-aa65114e6338</UserSecretsId>
 
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>

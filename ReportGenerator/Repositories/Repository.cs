@@ -9,7 +9,7 @@ namespace ReportGenerator.Repositories
     public abstract class Repository : IDisposable
     {
         protected ReportGeneratorContext dbContext;
-        protected Instance instance { get; private set; }= null!;
+        protected Instance instance { get; private set; } = null!;
 
         public void Dispose()
         {
@@ -31,7 +31,7 @@ namespace ReportGenerator.Repositories
                     dbContext.SaveChanges();
                     instance = newInstance;
                 }
-                else 
+                else
                     throw new Exception("Instance " + instanceName + " not found in database");
             }
             this.instance = instance;

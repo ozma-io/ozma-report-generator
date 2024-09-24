@@ -11,5 +11,5 @@ namespace ReportGenerator.FunDbApi
         public bool IsAdmin { get; set; }
         public PermissionsResponseJson? ResponseJson { get; set; }
         public HttpStatusCode ResponseCode { get; set; }
-}
+    }
 }

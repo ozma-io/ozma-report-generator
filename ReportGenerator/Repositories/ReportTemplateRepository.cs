@@ -42,7 +42,7 @@ namespace ReportGenerator.Repositories
 
         public async Task DeleteTemplate(int id)
         {
-            var item = dbContext.VReportTemplates.FirstOrDefault(p =>
+            var item = dbContext.VReportTemplates.First(p =>
                 (p.Schema.InstanceId == instance.Id) && (p.Id == id));
             dbContext.Remove(item);
             await dbContext.SaveChangesAsync();

@@ -28,25 +28,28 @@ namespace ReportGenerator
         public static TokenProcessor Create(IConfiguration configuration, HttpContext httpContext)
         {
             var principal = httpContext.User;
-            var identity = (ClaimsIdentity)principal.Identity;
+            var identity = (ClaimsIdentity)principal.Identity!;
             // Token is in identity for admin panel and in headers for regular generation requests.
             var accessTokenFromIdentity = identity.FindFirst("access_token");
-            if (accessTokenFromIdentity != null) {
-              // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
-              return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
-            } else {
-              var accessTokenFromHeader = httpContext.Request.Headers["Authorization"];
-              if (accessTokenFromHeader.Count == 0) throw new AuthenticationException("Access token not found");
-              var accessToken = accessTokenFromHeader.ToString().Split(' ');
-              if (accessToken.Length != 2) throw new AuthenticationException("Wrong access token format");
-              return new TokenProcessor(configuration, httpContext, accessToken[1]);
+            if (accessTokenFromIdentity != null)
+            {
+                // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
+                return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
+            }
+            else
+            {
+                var accessTokenFromHeader = httpContext.Request.Headers["Authorization"];
+                if (accessTokenFromHeader.Count == 0) throw new AuthenticationException("Access token not found");
+                var accessToken = accessTokenFromHeader.ToString().Split(' ');
+                if (accessToken.Length != 2) throw new AuthenticationException("Wrong access token format");
+                return new TokenProcessor(configuration, httpContext, accessToken[1]);
             }
         }
 
         public async Task RefreshToken()
         {
             var principal = httpContext.User;
-            var identity = (ClaimsIdentity)principal.Identity;
+            var identity = (ClaimsIdentity)principal.Identity!;
             var accessTokenClaim = identity.FindFirst("access_token");
             var refreshTokenClaim = identity.FindFirst("refresh_token");
             //var refreshToken = await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "refresh_token");
@@ -55,19 +58,19 @@ namespace ReportGenerator
             var response = await new HttpClient().RequestRefreshTokenAsync(new RefreshTokenRequest
             {
                 Address = configuration["AuthSettings:OpenIdConnectUrl"] + "protocol/openid-connect/token",
-                ClientId = configuration["AuthSettings:ClientId"],
+                ClientId = configuration["AuthSettings:ClientId"]!,
                 ClientSecret = configuration["AuthSettings:ClientSecret"],
                 RefreshToken = refreshToken
             });
             if (!response.IsError)
             {
-                AccessToken = response.AccessToken;
+                AccessToken = response.AccessToken!;
                 identity.RemoveClaim(accessTokenClaim);
                 identity.RemoveClaim(refreshTokenClaim);
                 identity.AddClaims(new[]
                 {
-                    new Claim("access_token", response.AccessToken),
-                    new Claim("refresh_token", response.RefreshToken)
+                    new Claim("access_token", response.AccessToken!),
+                    new Claim("refresh_token", response.RefreshToken!)
                 });
                 await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
             }

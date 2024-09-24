@@ -16,7 +16,7 @@ namespace ReportGenerator
         {
             var contentXml = odtWithQueries.ReadMainContentXml();
             XmlNode? bodyNode = null;
-            foreach (XmlNode? node in contentXml.DocumentElement.ChildNodes)
+            foreach (XmlNode? node in contentXml.DocumentElement!.ChildNodes)
             {
                 if ((node != null) && (node.Name == "office:body"))
                 {
@@ -139,7 +139,7 @@ namespace ReportGenerator
                 if ((match != null) && (match.Success) && (match.Groups.Count == 2))
                 {
                     var templateExpression = new TemplateExpression();
-                    
+
                     var expression = match.Groups[1].ToString();
                     if (expression.Contains("."))
                     {
@@ -191,7 +191,7 @@ namespace ReportGenerator
             {
                 var fileName = imageFileNameWithSize.Key;
                 var size = imageFileNameWithSize.Value;
-                var pattern = "((?<!xlink:href=\"Pictures\\/)" + fileName.Replace(".", "\\.") + ")" ;
+                var pattern = "((?<!xlink:href=\"Pictures\\/)" + fileName.Replace(".", "\\.") + ")";
                 var stringTo =
                     "<draw:frame svg:height=\"" + size.Height + "px\" svg:width=\"" + size.Width + "px\" draw:z-index=\"0\"><draw:image xlink:href=\"Pictures/" +
                     fileName +

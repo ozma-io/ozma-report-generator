@@ -57,7 +57,7 @@ namespace ReportGenerator.FunDbApi
             {
                 IsLoaded = true;
 
-                var responseJson = (string) result;
+                var responseJson = (string)result;
                 var viewExprResult = JsonConvert.DeserializeObject<ViewExprResult>(responseJson);
                 if (viewExprResult?.info != null && viewExprResult.result != null)
                 {
@@ -88,7 +88,7 @@ namespace ReportGenerator.FunDbApi
                             dynamic? value;
                             if (row.values[i].pun != null) value = row.values[i].pun;
                             else value = row.values[i].value;
-                            ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
+                            ((IDictionary<string, object?>)newItem).Add(columnsNames[i], value);
                         }
                         result = newItem;
                     }
@@ -103,7 +103,7 @@ namespace ReportGenerator.FunDbApi
                                 dynamic? value;
                                 if (row.values[i].pun != null) value = row.values[i].pun;
                                 else value = row.values[i].value;
-                                ((IDictionary<string, object>)newItem).Add(columnsNames[i], value);
+                                ((IDictionary<string, object?>)newItem).Add(columnsNames[i], value);
                             }
                             ((List<ExpandoObject>)result).Add(newItem);
                         }
@@ -130,10 +130,10 @@ namespace ReportGenerator.FunDbApi
                 for (var colNum = 0; colNum < viewExprResult.info.columns.Count(); colNum++)
                 {
                     var columnName = viewExprResult.info.columns[colNum].name;
-                    var uvAttributes = (IDictionary<string, object>) viewExprResult.result.attributes;
-                    var columnAttributes = (IDictionary<string, object>) viewExprResult.result.columnAttributes[colNum];
-                    var rowAttributes = (IDictionary<string, object>?) row.attributes;
-                    var valueAttributes = (IDictionary<string, object>?) row.values[colNum].attributes;
+                    var uvAttributes = (IDictionary<string, object?>)viewExprResult.result.attributes;
+                    var columnAttributes = (IDictionary<string, object?>)viewExprResult.result.columnAttributes[colNum];
+                    var rowAttributes = (IDictionary<string, object?>?)row.attributes;
+                    var valueAttributes = (IDictionary<string, object?>?)row.values[colNum].attributes;
 
                     #region control attribute
                     object? controlAttribute = null;
@@ -158,10 +158,10 @@ namespace ReportGenerator.FunDbApi
                             var domainId = row.domainId.ToString();
                             if (domainId != null)
                             {
-                                var domain = ((IDictionary<string, object>) viewExprResult.info.domains)[domainId];
+                                var domain = ((IDictionary<string, object?>)viewExprResult.info.domains)[domainId];
                                 if (domain != null)
                                 {
-                                    var columnInfo = ((IDictionary<string, object>) domain)[columnName];
+                                    var columnInfo = ((IDictionary<string, object>)domain)[columnName];
                                     if (columnInfo != null)
                                     {
                                         string? entityName = null;
@@ -169,11 +169,11 @@ namespace ReportGenerator.FunDbApi
                                         string? stringValueToEncode = null;
 
                                         var _ref =
-                                            (IDictionary<string, object>) ((IDictionary<string, object>) columnInfo)[
+                                            (IDictionary<string, object>)((IDictionary<string, object>)columnInfo)[
                                                 "ref"];
                                         if (_ref["name"].ToString() == "id")
                                         {
-                                            var entity = (IDictionary<string, object>) _ref["entity"];
+                                            var entity = (IDictionary<string, object>)_ref["entity"];
                                             if (entity != null)
                                             {
                                                 entityName = entity["name"].ToString();
@@ -183,12 +183,12 @@ namespace ReportGenerator.FunDbApi
                                         else
                                         {
                                             var field =
-                                                (IDictionary<string, object>) ((IDictionary<string, object>) columnInfo)
+                                                (IDictionary<string, object>)((IDictionary<string, object>)columnInfo)
                                                 [
                                                     "field"];
                                             if (field != null)
                                             {
-                                                var valueType = (IDictionary<string, object>) field["valueType"];
+                                                var valueType = (IDictionary<string, object>)field["valueType"];
                                                 if (valueType != null)
                                                 {
                                                     var type = valueType["type"];
@@ -198,11 +198,11 @@ namespace ReportGenerator.FunDbApi
 
                                                 if (stringValueToEncode == null)
                                                 {
-                                                    var fieldType = (IDictionary<string, object>) field["fieldType"];
+                                                    var fieldType = (IDictionary<string, object>)field["fieldType"];
                                                     if ((fieldType != null) &&
                                                         (fieldType["type"].ToString() == "reference"))
                                                     {
-                                                        var entity = (IDictionary<string, object>) fieldType["entity"];
+                                                        var entity = (IDictionary<string, object>)fieldType["entity"];
                                                         if (entity != null)
                                                         {
                                                             entityName = entity["name"].ToString();
@@ -313,21 +313,21 @@ namespace ReportGenerator.FunDbApi
                 }
                 else if (QueryType == QueryType.SingleRow)
                 {
-                    if (((ExpandoObject) _result).Any(p =>
+                    if (((ExpandoObject)_result).Any(p =>
                         (p.Key == barCodeFieldValue.QueryFieldName) &&
-                        (p.Value.ToString() == barCodeFieldValue.FieldValue)))
+                        (p.Value!.ToString() == barCodeFieldValue.FieldValue)))
                     {
-                        ((IDictionary<string, object>) _result)[barCodeFieldValue.QueryFieldName] = newValue;
+                        ((IDictionary<string, object>)_result)[barCodeFieldValue.QueryFieldName] = newValue;
                     }
                 }
                 else if (QueryType == QueryType.ManyRows)
                 {
-                    foreach (ExpandoObject item in (List<ExpandoObject>) _result)
+                    foreach (ExpandoObject item in (List<ExpandoObject>)_result)
                     {
                         if (item.Any(p =>
                             (p.Key == barCodeFieldValue.QueryFieldName) &&
-                            (p.Value.ToString() == barCodeFieldValue.FieldValue)))
-                            ((IDictionary<string, object>) item)[barCodeFieldValue.QueryFieldName] = newValue;
+                            (p.Value!.ToString() == barCodeFieldValue.FieldValue)))
+                            ((IDictionary<string, object?>)item)[barCodeFieldValue.QueryFieldName] = newValue;
                     }
                 }
             }

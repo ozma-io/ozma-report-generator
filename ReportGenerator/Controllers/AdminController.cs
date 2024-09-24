@@ -58,7 +58,7 @@ namespace ReportGenerator.Controllers
             var selectList = new SelectList(list, "Id", "Name");
             return selectList;
         }
-        
+
         [HttpGet]
         [Route("admin/{instanceName}/GetSchemaNamesList")]
         public async Task<JsonResult> GetSchemaNamesList(string instanceName)
@@ -75,7 +75,7 @@ namespace ReportGenerator.Controllers
 
             var permissions = await HasPermissionsForInstance(instanceName);
             if ((permissions == null) || (permissions.ResponseCode == System.Net.HttpStatusCode.Unauthorized))
-                return RedirectToAction("Index", new { instanceName } );
+                return RedirectToAction("Index", new { instanceName });
             if (!permissions.IsAdmin) return Unauthorized("User has no admin rights for this instance");
 
             new ReportTemplateRepository(configuration, instanceName, true);
@@ -212,7 +212,7 @@ namespace ReportGenerator.Controllers
                 {
                     Name = query.Name,
                     QueryText = query.QueryTextWithoutParameterValues,
-                    QueryType = (short) query.QueryType
+                    QueryType = (short)query.QueryType
                 };
                 model.ReportTemplateQueries.Add(newQuery);
             }

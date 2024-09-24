@@ -102,7 +102,7 @@ namespace ReportGenerator
                                                     " from template return result is not ExpandoObject");
                             foreach (var fieldName in templateExpression.FieldNames)
                             {
-                                if (!((ExpandoObject) loadedQuery.Result).Any(p => p.Key == fieldName))
+                                if (!((ExpandoObject)loadedQuery.Result).Any(p => p.Key == fieldName))
                                     throw new Exception("Query " + templateExpression.QueryName +
                                                         " error: field " + fieldName +
                                                         " not found in FunDb query results");
@@ -115,7 +115,7 @@ namespace ReportGenerator
                                                     " from template return result is not List<ExpandoObject>");
                             foreach (var fieldName in templateExpression.FieldNames)
                             {
-                                foreach (var item in (List<ExpandoObject>) loadedQuery.Result)
+                                foreach (var item in (List<ExpandoObject>)loadedQuery.Result)
                                 {
                                     if (!item.Any(p => p.Key == fieldName))
                                         throw new Exception("Query " + templateExpression.QueryName +
@@ -149,9 +149,9 @@ namespace ReportGenerator
                                 loadedQuery.ChangeBarCodeFieldValueInResult(barCodeFieldValue,
                                     documentBlob.Blob.FileName);
 
-                                var height = defaultImageHeight; 
+                                var height = defaultImageHeight;
                                 if (barCodeFieldValue.ImageHeightFromAttribute != null)
-                                    height = (int) barCodeFieldValue.ImageHeightFromAttribute;
+                                    height = (int)barCodeFieldValue.ImageHeightFromAttribute;
                                 var imageRatio = (float)image.Width / image.Height;
                                 var width = (int)(height * imageRatio);
                                 var size = new Size(width, height);

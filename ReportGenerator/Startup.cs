@@ -105,13 +105,13 @@ namespace ReportGenerator
                         {
                             OnTokenValidated = x =>
                             {
-                                var identity = (ClaimsIdentity) x.Principal.Identity;
+                                var identity = (ClaimsIdentity)x.Principal!.Identity!;
                                 identity.AddClaims(new[]
                                 {
-                                    new Claim("access_token", x.TokenEndpointResponse.AccessToken),
-                                    new Claim("refresh_token", x.TokenEndpointResponse.RefreshToken)
+                                    new Claim("access_token", x.TokenEndpointResponse!.AccessToken),
+                                    new Claim("refresh_token", x.TokenEndpointResponse!.RefreshToken)
                                 });
-                                x.Properties.IsPersistent = true;
+                                x.Properties!.IsPersistent = true;
                                 //var accessToken = new JwtSecurityToken(x.TokenEndpointResponse.AccessToken);
                                 //x.Properties.ExpiresUtc = accessToken.ValidTo;
                                 return Task.CompletedTask;
@@ -119,8 +119,8 @@ namespace ReportGenerator
                         };
                         if (Environment.IsDevelopment())
                         {
-                                options.NonceCookie.SameSite = SameSiteMode.Unspecified;
-                                options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
+                            options.NonceCookie.SameSite = SameSiteMode.Unspecified;
+                            options.CorrelationCookie.SameSite = SameSiteMode.Unspecified;
                         }
                     }
                 );

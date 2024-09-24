@@ -22,16 +22,18 @@ namespace ReportGenerator
             };
             return image;
         }
-        
+
         private SKImage GenerateBarCode(BarcodeFormat type, string text)
         {
-            var options = new EncodingOptions() {
+            var options = new EncodingOptions()
+            {
                 Height = 120,
                 Width = 290,
                 PureBarcode = true,
             };
 
-            var writer = new BarcodeWriter {
+            var writer = new BarcodeWriter
+            {
                 Format = BarcodeFormat.QR_CODE,
                 Options = options
             };
@@ -40,13 +42,15 @@ namespace ReportGenerator
 
         private SKImage GenerateQrCode(string text)
         {
-            var options = new QrCodeEncodingOptions() {
+            var options = new QrCodeEncodingOptions()
+            {
                 DisableECI = true,
                 CharacterSet = "UTF-8",
                 ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.Q,
             };
 
-            var writer = new BarcodeWriter {
+            var writer = new BarcodeWriter
+            {
                 Format = BarcodeFormat.QR_CODE,
                 Options = options
             };
