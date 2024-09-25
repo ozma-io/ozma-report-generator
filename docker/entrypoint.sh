@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -e
+
+if ! [ -e /etc/ozma-report-generator/config.json ]; then
+  if [ -z "$DB_HOST" ]; then
+    echo "DB_HOST must be set" >&2
+    exit 1
+  fi
+  if [ -z "$DB_PORT" ]; then
+    DB_PORT=5432
+  fi
+  if [ -z "$DB_USER" ]; then
+    echo "DB_USER must be set" >&2
+    exit 1
+  fi
+  if [ -z "$DB_PASSWORD" ]; then
+    echo "DB_PASSWORD must be set" >&2
+    exit 1
+  fi
+  if [ -z "$DB_NAME" ]; then
+    echo "DB_NAME must be set" >&2
+    exit 1
+  fi
+  if [ -z "$AUTH_AUTHORITY" ]; then
+    echo "AUTH_AUTHORITY must be set" >&2
+    exit 1
+  fi
+  if [ -z "$AUTH_CLIENT_ID" ]; then
+    echo "AUTH_CLIENT_ID must be set" >&2
+    exit 1
+  fi
+  if [ -z "$AUTH_CLIENT_SECRET" ]; then
+    echo "AUTH_CLIENT_SECRET must be set" >&2
+    exit 1
+  fi
+  if [ -z "$ORIGIN" ]; then
+    echo "ORIGIN must be set" >&2
+    exit 1
+  fi
+  if [ -z "$OZMA_DB_URL" ]; then
+    echo "OZMA_DB_URL must be set" >&2
+    exit 1
+  fi
+
+  mkdir -p /etc/ozma-report-generator
+  jq -n \
+    --arg dbHost "$DB_HOST" \
+    --argjson dbPort "$DB_PORT" \
+    --arg dbUser "$DB_USER" \
+    --arg dbPassword "$DB_PASSWORD" \
+    --arg dbName "$DB_NAME" \
+    --arg authAuthority "$AUTH_AUTHORITY" \
+    --arg authMetadataAddress "$AUTH_METADATA_ADDRESS" \
+    --arg authClientId "$AUTH_CLIENT_ID" \
+    --arg authClientSecret "$AUTH_CLIENT_SECRET" \
+    --argjson authRequireHttpsMetadata "${AUTH_REQUIRE_HTTPS_METADATA:-true}" \
+    --arg pathBase "$PATH_BASE" \
+    --arg origin "$ORIGIN" \
+    --arg ozmadbUrl "$OZMA_DB_URL" \
+    '{
+      "kestrel": {
+        "endPoints": {
+          "http": {
+            "url": "http://0.0.0.0:5000"
+          }
+        }
+      },
+      "connectionStrings": {
+        "postgreSql": "host=\($dbHost); port=\($dbPort); Username=\($dbUser); Password=\($dbPassword); Database=\($dbName)"
+      },
+      "authSettings": ({
+        "authority": $authAuthority,
+        "clientId": $authClientId,
+        "clientSecret": $authClientSecret,
+        "requireHttpsMetadata": $authRequireHttpsMetadata,
+      } + (if $authMetadataAddress == "" then {} else { "metadataAddress": $authMetadataAddress })),
+      "hostSettings": {
+        "pathBase": $pathBase,
+        "allowedOrigins": [$origin]
+      },
+      "ozmaDBSettings": {
+        "databaseServerUrl": $ozmadbUrl
+      },
+    }' > /etc/ozma-report-generator/config.json
+fi
+
+exec /opt/ozma-report-generator/OzmaReportGenerator /etc/ozma-report-generator/config.json

@@ -1,0 +1,24 @@
+{
+  "kestrel": {
+    "endPoints": {
+      "http": {
+        "url": "http://0.0.0.0:1480"
+      }
+    }
+  },
+  "connectionStrings": {
+    "postgreSql": "host=localhost; Username=dev; Password=dev"
+  },
+  "authSettings": {
+    "authority": "http://localhost:9000/auth/realms/ozma/",
+    "clientId": "report-generator",
+    "clientSecret": "secret"
+  },
+  "hostSettings": {
+    "pathBase": "/document-generator",
+    "allowedOrigins": ["http://localhost:9000"]
+  },
+  "ozmaDBSettings": {
+    "databaseServerUrl": "http://localhost:9000/api"
+  }
+}
