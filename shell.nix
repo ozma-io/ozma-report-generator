@@ -16,6 +16,7 @@
         kerberos
         lldb
         openssl
+        unoconv
         # Required for vsdbg
         icu
       ];
