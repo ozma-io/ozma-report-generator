@@ -30,8 +30,6 @@
 @section scripts
 {
     <script type="text/javascript">
-        var instanceName = '@ViewBag.instanceName';
-
         function SelectOdt(templateId) {
             $("#templateToUploadFileToId").val(templateId);
             $("#UploadedOdtFile").click();
@@ -39,7 +37,7 @@
 
         function UploadOdt(templateId) {
             var formId = "formUpdateFile";
-            var updateUrl = "/Admin/" + instanceName + "/UpdateTemplateFile?templateId=" + templateId;
+            var updateUrl = "./UpdateTemplateFile?templateId=" + templateId;
             var form = $("#" + formId);
             form.validate();
             if (form.valid()) {

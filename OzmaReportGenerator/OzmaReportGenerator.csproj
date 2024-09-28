@@ -29,12 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot/js/crud.js">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="db/db.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

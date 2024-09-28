@@ -23,6 +23,9 @@ namespace ReportGenerator.Repositories
         {
             if (string.IsNullOrEmpty(instanceName))
                 throw new Exception("Instance name cannot be empty");
+            var forceInstance = configuration.GetValue<string>("OzmaDBSettings:ForceInstance");
+            if (forceInstance != null && forceInstance != instanceName)
+                throw new Exception("Instance name cannot be changed by configuration");
             dbContext = new ReportGeneratorContext(configuration);
             Instance? instance;
             try

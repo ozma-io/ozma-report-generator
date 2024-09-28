@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -97,6 +98,10 @@ namespace ReportGenerator
             {
                 app.UsePathBase(pathBase);
             }
+
+            var options = new RewriteOptions()
+                .AddRedirect("(?i)^admin/([^/]+)$", "admin/$1/");
+            app.UseRewriter(options);
 
             if (Environment.IsDevelopment())
             {

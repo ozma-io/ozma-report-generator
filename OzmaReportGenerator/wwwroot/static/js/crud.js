@@ -1,5 +1,5 @@
 ﻿function LoadList(objectName) {
-    var loadListUrl = "/Admin/" + instanceName + "/Load" + objectName + "s";
+    var loadListUrl = "./Load" + objectName + "s";
     var tableId = "tableMainList" + objectName + "s";
     $.ajax({
         url: loadListUrl,
@@ -15,7 +15,7 @@
     });
 }
 function Add(objectName) {
-    var addUrl = "/Admin/" + instanceName + "/Add" + objectName;
+    var addUrl = "./Add" + objectName;
     var modalWindow = $("#add" + objectName + "Modal");
     var form = $("#add" + objectName + "Form");
     form.validate();
@@ -43,7 +43,7 @@ function Add(objectName) {
     }
 }
 function AddWithFile(objectName) {
-    var addUrl = "/Admin/" + instanceName + "/Add" + objectName;
+    var addUrl = "./Add" + objectName;
     var modalWindow = $("#add" + objectName + "Modal");
     var form = $("#add" + objectName + "Form");
     form.validate();
@@ -69,7 +69,7 @@ function AddWithFile(objectName) {
     }
 }
 function Delete(objectName, id) {
-    var deleteUrl = "/Admin/" + instanceName + "/Delete" + objectName;
+    var deleteUrl = "./Delete" + objectName;
     $.ajax({
         url: deleteUrl,
         method: "DELETE",
@@ -90,7 +90,7 @@ function Delete(objectName, id) {
     });
 }
 function LoadSchemaNamesList() {
-    var url = "/Admin/" + instanceName + "/GetSchemaNamesList";
+    var url = "./GetSchemaNamesList";
     $.ajax({
         url: url,
         method: "GET",
