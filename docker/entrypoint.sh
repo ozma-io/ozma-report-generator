@@ -29,10 +29,6 @@ if ! [ -e /etc/ozma-report-generator/config.json ]; then
     echo "AUTH_CLIENT_ID must be set" >&2
     exit 1
   fi
-  if [ -z "$AUTH_CLIENT_SECRET" ]; then
-    echo "AUTH_CLIENT_SECRET must be set" >&2
-    exit 1
-  fi
   if [ -z "$ORIGIN" ]; then
     echo "ORIGIN must be set" >&2
     exit 1
