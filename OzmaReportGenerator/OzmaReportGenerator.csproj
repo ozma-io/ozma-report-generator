@@ -4,6 +4,7 @@
     <Version>0.0.8</Version>
     <TargetFramework>net8.0</TargetFramework>
     <UserSecretsId>092b9463-f921-4cb4-af08-aa65114e6338</UserSecretsId>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <LangVersion>10.0</LangVersion>
