@@ -8,6 +8,9 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
+
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
