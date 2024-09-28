@@ -52,7 +52,6 @@ namespace ReportGenerator
                         options.MetadataAddress = Configuration["AuthSettings:MetadataAddress"];
                         options.RequireHttpsMetadata = Configuration.GetValue("AuthSettings:RequireHttpsMetadata", true);
                         options.SaveTokens = true;
-                        options.RequireHttpsMetadata = !Environment.IsDevelopment();
                         options.ResponseType = "code";
                         options.GetClaimsFromUserInfoEndpoint = true;
                         options.TokenValidationParameters =
