@@ -71,9 +71,9 @@ if ! [ -e /etc/ozma-report-generator/config.json ]; then
       "authSettings": ({
         "authority": $authAuthority,
         "clientId": $authClientId,
-        "clientSecret": $authClientSecret,
         "requireHttpsMetadata": $authRequireHttpsMetadata,
-      } + (if $authMetadataAddress == "" then {} else { "metadataAddress": $authMetadataAddress } end)),
+      } + (if $authMetadataAddress == "" then {} else { "metadataAddress": $authMetadataAddress } end)
+        + (if $authClientSecret == "" then {} else { "clientSecret": $authClientSecret } end)),
       "hostSettings": ({
         "allowedOrigins": [$origin]
       } + (if $pathBase == "" then {} else { "pathBase": $pathBase } end)),
