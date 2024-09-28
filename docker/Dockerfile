@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y \
-  jq \
+  jq unoconv \
   && rm -rf /var/lib/apt/lists/*
 
 COPY out/ /opt/ozma-report-generator
