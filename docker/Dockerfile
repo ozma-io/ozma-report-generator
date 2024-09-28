@@ -7,4 +7,5 @@ RUN apt-get update && apt-get install -y \
 COPY out/ /opt/ozma-report-generator
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
+VOLUME ["/root/.aspnet/DataProtection-Keys"]
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
