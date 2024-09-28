@@ -1,9 +1,9 @@
-using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace ReportGenerator
 {
@@ -11,30 +11,24 @@ namespace ReportGenerator
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add configuration
+            var configurationBuilder =
+                new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory());
             if (args.Any())
             {
                 var configPath = args[0];
-                builder.Configuration.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), configPath));
+                configurationBuilder
+                    .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), configPath));
             }
+            configurationBuilder.AddEnvironmentVariables();
 
-            if (!builder.Environment.IsDevelopment())
-            {
-                builder.Environment.ContentRootPath = AppContext.BaseDirectory;
-            }
-
-            // Add services to the container
-            var startup = new Startup(builder.Environment, builder.Configuration);
-            startup.ConfigureServices(builder.Services);
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline
-            startup.Configure(app);
-
-            app.Run();
+            WebHost
+                .CreateDefaultBuilder(args)
+        .UseContentRoot(AppContext.BaseDirectory)
+                .UseConfiguration(configurationBuilder.Build())
+                .UseStartup<Startup>()
+                .Build()
+                .Run();
         }
     }
 }

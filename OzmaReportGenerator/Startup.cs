@@ -90,7 +90,7 @@ namespace ReportGenerator
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(WebApplication app)
+        public void Configure(IApplicationBuilder app)
         {
             var pathBase = Configuration["HostSettings:PathBase"];
             if (pathBase != null)
@@ -130,9 +130,15 @@ namespace ReportGenerator
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Admin}/{action=Index}/{id?}");
+            //app.UseSession();
+
+            app.UseEndpoints(endpoints =>
+            {
+                //endpoints.MapControllers();
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Admin}/{action=Index}/{id?}");
+            });
         }
     }
 }
