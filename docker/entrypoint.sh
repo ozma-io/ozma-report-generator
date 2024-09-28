@@ -53,6 +53,7 @@ if ! [ -e /etc/ozma-report-generator/config.json ]; then
     --arg pathBase "$PATH_BASE" \
     --arg origin "$ORIGIN" \
     --arg ozmadbUrl "$OZMA_DB_URL" \
+    --arg ozmadbForceInstance "$OZMA_DB_FORCE_INSTANCE" \
     '{
       "kestrel": {
         "endPoints": {
@@ -73,9 +74,9 @@ if ! [ -e /etc/ozma-report-generator/config.json ]; then
       "hostSettings": ({
         "allowedOrigins": [$origin]
       } + (if $pathBase == "" then {} else { "pathBase": $pathBase } end)),
-      "ozmaDBSettings": {
+      "ozmaDBSettings": ({
         "databaseServerUrl": $ozmadbUrl
-      },
+      } + (if $ozmadbForceInstance == "" then {} else { "forceInstance": $ozmadbForceInstance } end)),
     }' > /etc/ozma-report-generator/config.json
 fi
 
