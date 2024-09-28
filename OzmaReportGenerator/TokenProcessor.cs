@@ -27,22 +27,28 @@ namespace ReportGenerator
 
         public static TokenProcessor Create(IConfiguration configuration, HttpContext httpContext)
         {
-            var principal = httpContext.User;
-            var identity = (ClaimsIdentity)principal.Identity!;
-            // Token is in identity for admin panel and in headers for regular generation requests.
-            var accessTokenFromIdentity = identity.FindFirst("access_token");
-            if (accessTokenFromIdentity != null)
+            // Token is in headers for regular generation requests and in identity for admin panel.
+            var accessTokenFromHeader = httpContext.Request.Headers["Authorization"];
+            if (accessTokenFromHeader.Count > 0)
             {
-                // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
-                return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
-            }
-            else
-            {
-                var accessTokenFromHeader = httpContext.Request.Headers["Authorization"];
-                if (accessTokenFromHeader.Count == 0) throw new AuthenticationException("Access token not found");
                 var accessToken = accessTokenFromHeader.ToString().Split(' ');
                 if (accessToken.Length != 2) throw new AuthenticationException("Wrong access token format");
                 return new TokenProcessor(configuration, httpContext, accessToken[1]);
+            }
+            else
+            {
+                var principal = httpContext.User;
+                var identity = (ClaimsIdentity)principal.Identity!;
+                var accessTokenFromIdentity = identity.FindFirst("access_token");
+                if (accessTokenFromIdentity != null)
+                {
+                    // await httpContext.GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, "access_token");
+                    return new TokenProcessor(configuration, httpContext, accessTokenFromIdentity.Value);
+                }
+                else
+                {
+                    throw new AuthenticationException("Access token not found");
+                }
             }
         }
 
