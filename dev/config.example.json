@@ -11,11 +11,12 @@
   },
   "authSettings": {
     "authority": "http://localhost:9000/auth/realms/ozma/",
-    "clientId": "report-generator",
-    "clientSecret": "secret"
+    "clientId": "ozma-report-generator",
+    "clientSecret": "ozma-report-generator",
+    "requireHttpsMetadata": false
   },
   "hostSettings": {
-    "pathBase": "/document-generator",
+    "pathBase": "/report-generator",
     "allowedOrigins": ["http://localhost:9000"]
   },
   "ozmaDBSettings": {

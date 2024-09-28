@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Data.Common;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ReportGenerator.Models;
 
@@ -21,7 +24,26 @@ namespace ReportGenerator.Repositories
             if (string.IsNullOrEmpty(instanceName))
                 throw new Exception("Instance name cannot be empty");
             dbContext = new ReportGeneratorContext(configuration);
-            var instance = dbContext.Instances.FirstOrDefault(p => p.Name == instanceName);
+            Instance? instance;
+            try
+            {
+                instance = dbContext.Instances.FirstOrDefault(p => p.Name == instanceName);
+            }
+            catch (DbException e)
+            {
+                // Table doesn't exist
+                if (e.SqlState == "42P01")
+                {
+                    var dbScript = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db", "db.sql");
+                    var dbScriptContent = File.ReadAllText(dbScript);
+                    dbContext.Database.ExecuteSqlRaw(dbScriptContent);
+                    instance = dbContext.Instances.FirstOrDefault(p => p.Name == instanceName);
+                }
+                else
+                {
+                    throw;
+                }
+            }
             if (instance == null)
             {
                 if (createInstanceIfNotExists)

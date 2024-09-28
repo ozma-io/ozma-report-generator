@@ -112,6 +112,12 @@ namespace ReportGenerator
 
             app.UseStaticFiles();
 
+            var pathBase = Configuration["HostSettings:PathBase"];
+            if (pathBase != null)
+            {
+                app.UsePathBase(pathBase);
+            }
+
             app.UseRouting();
 
             var forwardingOptions = new ForwardedHeadersOptions
@@ -124,11 +130,6 @@ namespace ReportGenerator
 
             app.UseAuthentication();
             app.UseAuthorization();
-            var pathBase = Configuration["HostSettings:PathBase"];
-            if (pathBase != null)
-            {
-                app.UsePathBase(pathBase);
-            }
 
             //app.UseSession();
 
