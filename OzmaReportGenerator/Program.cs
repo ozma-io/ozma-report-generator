@@ -24,6 +24,7 @@ namespace ReportGenerator
 
             WebHost
                 .CreateDefaultBuilder(args)
+        .UseContentRoot(AppContext.BaseDirectory)
                 .UseConfiguration(configurationBuilder.Build())
                 .UseStartup<Startup>()
                 .Build()
