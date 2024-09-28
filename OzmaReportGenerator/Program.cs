@@ -11,9 +11,7 @@ namespace ReportGenerator
     {
         public static void Main(string[] args)
         {
-            var configurationBuilder =
-                new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory());
+            var configurationBuilder = new ConfigurationBuilder();
             if (args.Any())
             {
                 var configPath = args[0];
@@ -24,7 +22,6 @@ namespace ReportGenerator
 
             WebHost
                 .CreateDefaultBuilder(args)
-        .UseContentRoot(AppContext.BaseDirectory)
                 .UseConfiguration(configurationBuilder.Build())
                 .UseStartup<Startup>()
                 .Build()

@@ -79,4 +79,5 @@ if ! [ -e /etc/ozma-report-generator/config.json ]; then
     }' > /etc/ozma-report-generator/config.json
 fi
 
+export ASPNETCORE_CONTENTROOT=/opt/ozma-report-generator
 exec /opt/ozma-report-generator/OzmaReportGenerator /etc/ozma-report-generator/config.json
