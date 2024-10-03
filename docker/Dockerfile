@@ -9,4 +9,5 @@ COPY out/ /opt/ozma-report-generator
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 VOLUME ["/root/.aspnet/DataProtection-Keys"]
+EXPOSE 5000/tcp
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
